@@ -14,7 +14,7 @@ extern DFA *DFA_create(const size_t state_count,
 extern void DFA_destroy(DFA *dfa);
 
 extern void DFA_set_state(DFA *dfa,
-                           const unsigned int state_index,
-                           const State *state);
+                          const unsigned int state_index,
+                          const State *state);
 
 #endif
