@@ -1,9 +1,15 @@
+#include <stdio.h>
+
 #include "dfa.h"
 #include "state.h"
+#include "parser.h"
 
 
 int main(int argc, char **argv)
 {
+    (void) argc;
+    (void) argv;
+
     unsigned int terminal_states[3] = {
         1,
         2,
@@ -83,6 +89,24 @@ int main(int argc, char **argv)
     }
 
     DFA_destroy(dfa);
+
+
+
+    const char *regex_str = "(a|b)*cd.efg\\hi[j]";
+
+    printf("Regex:\n\"%s\"\n\n", regex_str);
+
+    Regex *regex;
+    regex = Regex_create(regex_str);
+
+    Parser *parser;
+    parser = Parser_create(regex);
+
+    Regex_destroy(regex);
+
+    Parser_match_symbols(parser);
+
+    Parser_destroy(parser);
 
 
     return 0;
