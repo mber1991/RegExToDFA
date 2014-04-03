@@ -20,6 +20,7 @@ Tokens to keep in mind:
 * a...z -- Matches a range of characters
 * A...Z -- Matches range of characters
 * 0...9 -- Matches range of numbers
-* . -- Literally just one character, a period. IP Address stuff.
+* \\. -- Literally just one character, a period. IP Address stuff.
 * / -- Forward slash for IP Addresses
 * : -- Denotes a port will follow
+* . -- Any character
