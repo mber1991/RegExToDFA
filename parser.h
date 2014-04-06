@@ -1,8 +1,6 @@
 #ifndef PARSER_H
 #define PARSER_H
 
-#include <stddef.h>
-
 #include "regex.h"
 #include "token.h"
 

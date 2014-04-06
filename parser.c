@@ -15,13 +15,13 @@ static Token *init_tokens(Regex *regex)
         return NULL;
     }
 
-    Token *tokens = malloc(sizeof(Token) * regex->length);
+    Token *tokens = malloc(sizeof(Token) * Regex_get_length(regex));
 
     if (tokens != NULL) {
         unsigned int i;
-        for (i = 0; i < regex->length; ++i) {
+        for (i = 0; i < Regex_get_length(regex); ++i) {
             char *temp = malloc(sizeof(char) * 2);
-            temp[0] = regex->value[i];
+            temp[0] = Regex_get_value(regex)[i];
             temp[1] = '\0';
             tokens[i].value = temp;
 
@@ -42,7 +42,7 @@ Parser *Parser_create(Regex *regex)
 
     if (parser != NULL) {
         parser->tokens = init_tokens(regex);
-        parser->token_count = regex->length;
+        parser->token_count = Regex_get_length(regex);
     }
 
     return parser;

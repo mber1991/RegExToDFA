@@ -4,6 +4,11 @@
 #include <string.h>
 
 
+struct Regex {
+    char *value;
+    size_t length;
+};
+
 Regex *Regex_create(const char *value)
 {
     Regex *regex = malloc(sizeof(Regex));
@@ -48,6 +53,15 @@ const char *Regex_get_value(Regex *regex)
     return regex->value;
 }
 
+size_t Regex_get_length(Regex *regex)
+{
+    if (regex == NULL) {
+        return 0;
+    }
+
+    return regex->length;
+}
+
 void Regex_set_value(Regex *regex, const char *value)
 {
     if (regex == NULL) {
@@ -66,13 +80,4 @@ void Regex_set_value(Regex *regex, const char *value)
     }
 
     regex->length = length;
-}
-
-size_t Regex_get_length(Regex *regex)
-{
-    if (regex == NULL) {
-        return 0;
-    }
-
-    return regex->length;
 }
