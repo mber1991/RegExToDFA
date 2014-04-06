@@ -1,35 +1,13 @@
 #include "parser.h"
 
 #include <stdlib.h>
-#include <string.h>
 #include <stdio.h>
 
 
-struct Token
-{
-    char *value;
-    unsigned int index;
-};
-
-struct Parser
-{
+struct Parser {
     Token *tokens;
     size_t token_count;
 };
-
-static const char *symbols[] = {
-    [SYMBOL_UNKNOWN]      = "",
-    [SYMBOL_GROUP_BEG]    = "(",
-    [SYMBOL_GROUP_END]    = ")",
-    [SYMBOL_RANGE_BEG]    = "[",
-    [SYMBOL_RANGE_END]    = "]",
-    [SYMBOL_ANY_CHAR]     = ".",
-    [SYMBOL_ZERO_OR_MORE] = "*",
-    [SYMBOL_OR]           = "|",
-    [SYMBOL_ESCAPE]       = "\\",
-};
-
-static const size_t symbol_count = 9;
 
 static Token *init_tokens(Regex *regex)
 {
@@ -92,32 +70,20 @@ void Parser_destroy(Parser *parser)
     parser = NULL;
 }
 
-void Parser_match_symbols(Parser *parser)
+Token *Parser_get_tokens(Parser *parser)
 {
     if (parser == NULL) {
-        return;
+        return NULL;
     }
 
-    printf("Tokens: \n{\n");
-    unsigned int i;
-    for (i = 0; i < parser->token_count; ++i) {
-        printf("    %u => \"%s\"\n",
-               parser->tokens[i].index,
-               parser->tokens[i].value);
-    }
-    printf("}\n\n");
-
-    printf("Symbols: \n{\n");
-    for (i = 0; i < parser->token_count; ++i) {
-        unsigned int j;
-        for (j = 0; j < symbol_count; ++j) {
-            if (strcmp(parser->tokens[i].value, symbols[j]) == 0) {
-                printf("    %u => \"%s\"\n",
-                       parser->tokens[i].index,
-                       parser->tokens[i].value);
-            }
-        }
-    }
-    printf("}\n");
+    return parser->tokens;
 }
 
+size_t Parser_get_token_count(Parser *parser)
+{
+    if (parser == NULL) {
+        return 0;
+    }
+
+    return parser->token_count;
+}

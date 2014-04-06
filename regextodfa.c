@@ -3,6 +3,7 @@
 #include "dfa.h"
 #include "state.h"
 #include "parser.h"
+#include "lexer.h"
 
 
 int main(int argc, char **argv)
@@ -102,11 +103,29 @@ int main(int argc, char **argv)
     Parser *parser;
     parser = Parser_create(regex);
 
+    const Symbol symbols[] = {
+        { "",   SYMBOL_UNKNOWN      },
+        { "(",  SYMBOL_GROUP_BEG    },
+        { ")",  SYMBOL_GROUP_END    },
+        { "[",  SYMBOL_RANGE_BEG    },
+        { "]",  SYMBOL_RANGE_END    },
+        { ".",  SYMBOL_ANY_CHAR     },
+        { "*",  SYMBOL_ZERO_OR_MORE },
+        { "|",  SYMBOL_OR           },
+        { "\\", SYMBOL_ESCAPE       },
+    };
+
+    Lexer *lexer;
+    lexer = Lexer_create(symbols, 9);
+
+    Lexer_match_symbols(lexer,
+                        Parser_get_tokens(parser),
+                        Parser_get_token_count(parser));
+
     Regex_destroy(regex);
-
-    Parser_match_symbols(parser);
-
     Parser_destroy(parser);
+    Lexer_destroy(lexer);
+
 
 
     return 0;
