@@ -19,7 +19,6 @@ int main(int argc, char **argv)
 
     DFA *dfa = DFA_create(20, terminal_states, 3);
 
-
     {
         unsigned int symbols[15] = {
             'a',
@@ -92,8 +91,8 @@ int main(int argc, char **argv)
     DFA_destroy(dfa);
 
 
-
-    const char *regex_str = "(a|b)*cd.e(f(sssg))\\hi[a-j[o-z]]";
+    const char *regex_str;
+    regex_str = "(a|b)*c\\*d.e(f(s\\n*ssg))\\hi[a-j\\.[o-z[0-7]]]";
 
     printf("Regex:\n\"%s\"\n\n", regex_str);
 
@@ -118,10 +117,6 @@ int main(int argc, char **argv)
     Lexer *lexer;
     lexer = Lexer_create(symbols, 9);
 
-    // Lexer_match_symbols(lexer,
-    //                     Parser_get_tokens(parser),
-    //                     Parser_get_token_count(parser));
-
     Lexer_match_groups(lexer,
                        Parser_get_tokens(parser),
                        Parser_get_token_count(parser));
@@ -130,10 +125,13 @@ int main(int argc, char **argv)
                        Parser_get_tokens(parser),
                        Parser_get_token_count(parser));
 
+    Lexer_match_escapes(lexer,
+                        Parser_get_tokens(parser),
+                        Parser_get_token_count(parser));
+
     Regex_destroy(regex);
     Parser_destroy(parser);
     Lexer_destroy(lexer);
-
 
 
     return 0;

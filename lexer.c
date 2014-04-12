@@ -10,11 +10,11 @@ struct Lexer {
     size_t symbol_count;
 };
 
-static void get_delimited_range(const Lexer *lexer,
-                                const Token *tokens,
-                                const size_t token_count,
-                                const char *begin_delimeter,
-                                const char *end_delimeter)
+static void get_delimited_tokens(const Lexer *lexer,
+                                 const Token *tokens,
+                                 const size_t token_count,
+                                 const char *begin_delimeter,
+                                 const char *end_delimeter)
 {
     if (lexer == NULL || tokens == NULL) {
         return;
@@ -113,7 +113,62 @@ static void get_delimited_range(const Lexer *lexer,
     }
 }
 
-Lexer *Lexer_create(const Symbol *symbols, size_t symbol_count)
+static void get_adjacent_tokens(const Lexer *lexer,
+                                const Token *tokens,
+                                const size_t token_count,
+                                const char *delimeter)
+{
+    if (lexer == NULL || tokens == NULL) {
+        return;
+    }
+
+    unsigned int *indices;
+    indices = malloc(token_count * sizeof(unsigned int));
+
+    if (indices == NULL) {
+        return;
+    }
+
+    {
+        unsigned int i;
+        for (i = 0; i < token_count; ++i) {
+            indices[i] = 0;
+        }
+    }
+
+    {
+        unsigned int i, found;
+        found = 0;
+        for (i = 0; i < token_count; ++i) {
+            if (found == 1) {
+                indices[i] = 1;
+                found = 0;
+            }
+            else if (strcmp(tokens[i].value, delimeter) == 0) {
+                found = 1;
+            }
+        }
+    }
+
+    {
+        unsigned int i;
+        for (i = 0; i < token_count; ++i) {
+            if (indices[i] == 1 || indices[i] == 2) {
+                printf("%4s%-4u=> \"%s\"\n",
+                       "",
+                       i,
+                       tokens[i].value);
+            }
+        }
+    }
+
+    if (indices != NULL) {
+        free(indices);
+        indices = NULL;
+    }
+}
+
+Lexer *Lexer_create(const Symbol *symbols, const size_t symbol_count)
 {
     Lexer *lexer = malloc(sizeof(Lexer));
 
@@ -133,54 +188,40 @@ void Lexer_destroy(Lexer *lexer)
     }
 }
 
-void Lexer_match_symbols(Lexer *lexer, Token *tokens, size_t token_count)
+void Lexer_match_groups(const Lexer *lexer,
+                        const Token *tokens,
+                        const size_t token_count)
 {
-    if (lexer == NULL || tokens == NULL) {
-        return;
-    }
-
-    printf("Tokens: \n{\n");
-    unsigned int i;
-    for (i = 0; i < token_count; ++i) {
-        printf("    %-4u => \"%s\"\n",
-               tokens[i].index,
-               tokens[i].value);
-    }
-    printf("}\n\n");
-
-    printf("Symbols: \n{\n");
-    for (i = 0; i < token_count; ++i) {
-        unsigned int j;
-        for (j = 0; j < lexer->symbol_count; ++j) {
-            if (strcmp(tokens[i].value, lexer->symbols[j].value) == 0) {
-                printf("    %-4u => \"%s\"\n",
-                       tokens[i].index,
-                       tokens[i].value);
-            }
-        }
-    }
-    printf("}\n");
-}
-
-void Lexer_match_groups(Lexer *lexer, Token *tokens, size_t token_count)
-{
-
     printf("Groups:\n");
-    get_delimited_range(lexer,
-                        tokens,
-                        token_count,
-                        lexer->symbols[SYMBOL_GROUP_BEG].value,
-                        lexer->symbols[SYMBOL_GROUP_END].value);
+    get_delimited_tokens(lexer,
+                         tokens,
+                         token_count,
+                         lexer->symbols[SYMBOL_GROUP_BEG].value,
+                         lexer->symbols[SYMBOL_GROUP_END].value);
     printf("\n");
 }
 
-void Lexer_match_ranges(Lexer *lexer, Token *tokens, size_t token_count)
+void Lexer_match_ranges(const Lexer *lexer,
+                        const Token *tokens,
+                        const size_t token_count)
 {
     printf("Ranges:\n");
-    get_delimited_range(lexer,
-                        tokens,
-                        token_count,
-                        lexer->symbols[SYMBOL_RANGE_BEG].value,
-                        lexer->symbols[SYMBOL_RANGE_END].value);
+    get_delimited_tokens(lexer,
+                         tokens,
+                         token_count,
+                         lexer->symbols[SYMBOL_RANGE_BEG].value,
+                         lexer->symbols[SYMBOL_RANGE_END].value);
     printf("\n");
+}
+
+void Lexer_match_escapes(const Lexer *lexer,
+                         const Token *tokens,
+                         const size_t token_count)
+{
+    printf("Escape Characters:\n{\n");
+    get_adjacent_tokens(lexer,
+                       tokens,
+                       token_count,
+                       lexer->symbols[SYMBOL_ESCAPE].value);
+    printf("}\n");
 }

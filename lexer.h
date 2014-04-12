@@ -25,12 +25,19 @@ typedef struct Symbol {
 
 typedef struct Lexer Lexer;
 
-extern Lexer *Lexer_create(const Symbol *symbols, size_t symbol_count);
+extern Lexer *Lexer_create(const Symbol *symbols, const size_t symbol_count);
 extern void Lexer_destroy(Lexer *lexer);
 
-extern void Lexer_match_symbols(Lexer *lexer, Token *tokens, size_t token_count);
+extern void Lexer_match_groups(const Lexer *lexer,
+                               const Token *tokens,
+                               const size_t token_count);
 
-extern void Lexer_match_groups(Lexer *lexer, Token *tokens, size_t token_count);
-extern void Lexer_match_ranges(Lexer *lexer, Token *tokens, size_t token_count);
+extern void Lexer_match_ranges(const Lexer *lexer,
+                               const Token *tokens,
+                               const size_t token_count);
+
+extern void Lexer_match_escapes(const Lexer *lexer,
+                                const Token *tokens,
+                                const size_t token_count);
 
 #endif
