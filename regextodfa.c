@@ -93,7 +93,7 @@ int main(int argc, char **argv)
 
 
 
-    const char *regex_str = "(a|b)*cd.efg\\hi[j]";
+    const char *regex_str = "(a|b)*cd.e(f(sssg))\\hi[a-j[o-z]]";
 
     printf("Regex:\n\"%s\"\n\n", regex_str);
 
@@ -118,9 +118,17 @@ int main(int argc, char **argv)
     Lexer *lexer;
     lexer = Lexer_create(symbols, 9);
 
-    Lexer_match_symbols(lexer,
-                        Parser_get_tokens(parser),
-                        Parser_get_token_count(parser));
+    // Lexer_match_symbols(lexer,
+    //                     Parser_get_tokens(parser),
+    //                     Parser_get_token_count(parser));
+
+    Lexer_match_groups(lexer,
+                       Parser_get_tokens(parser),
+                       Parser_get_token_count(parser));
+
+    Lexer_match_ranges(lexer,
+                       Parser_get_tokens(parser),
+                       Parser_get_token_count(parser));
 
     Regex_destroy(regex);
     Parser_destroy(parser);

@@ -30,4 +30,7 @@ extern void Lexer_destroy(Lexer *lexer);
 
 extern void Lexer_match_symbols(Lexer *lexer, Token *tokens, size_t token_count);
 
+extern void Lexer_match_groups(Lexer *lexer, Token *tokens, size_t token_count);
+extern void Lexer_match_ranges(Lexer *lexer, Token *tokens, size_t token_count);
+
 #endif
