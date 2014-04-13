@@ -2,8 +2,8 @@
 
 #include "dfa.h"
 #include "state.h"
-#include "parser.h"
 #include "lexer.h"
+#include "parser.h"
 
 
 int main(int argc, char **argv)
@@ -99,8 +99,8 @@ int main(int argc, char **argv)
     Regex *regex;
     regex = Regex_create(regex_str);
 
-    Parser *parser;
-    parser = Parser_create(regex);
+    Lexer *lexer;
+    lexer = Lexer_create(regex);
 
     const Symbol symbols[] = {
         { "",   SYMBOL_UNKNOWN      },
@@ -114,24 +114,24 @@ int main(int argc, char **argv)
         { "\\", SYMBOL_ESCAPE       },
     };
 
-    Lexer *lexer;
-    lexer = Lexer_create(symbols, 9);
+    Parser *parser;
+    parser = Parser_create(symbols, 9);
 
-    Lexer_match_groups(lexer,
-                       Parser_get_tokens(parser),
-                       Parser_get_token_count(parser));
+    Parser_match_groups(parser,
+                        Lexer_get_tokens(lexer),
+                        Lexer_get_token_count(lexer));
 
-    Lexer_match_ranges(lexer,
-                       Parser_get_tokens(parser),
-                       Parser_get_token_count(parser));
+    Parser_match_ranges(parser,
+                        Lexer_get_tokens(lexer),
+                        Lexer_get_token_count(lexer));
 
-    Lexer_match_escapes(lexer,
-                        Parser_get_tokens(parser),
-                        Parser_get_token_count(parser));
+    Parser_match_escapes(parser,
+                         Lexer_get_tokens(lexer),
+                         Lexer_get_token_count(lexer));
 
     Regex_destroy(regex);
-    Parser_destroy(parser);
     Lexer_destroy(lexer);
+    Parser_destroy(parser);
 
 
     return 0;

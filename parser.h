@@ -1,16 +1,43 @@
-#ifndef PARSER_H
-#define PARSER_H
+#ifndef LEXER_H
+#define LEXER_H
 
-#include "regex.h"
+#include <stddef.h>
+
 #include "token.h"
 
 
+typedef enum SYMBOL_TYPE {
+    SYMBOL_UNKNOWN,
+    SYMBOL_GROUP_BEG,
+    SYMBOL_GROUP_END,
+    SYMBOL_RANGE_BEG,
+    SYMBOL_RANGE_END,
+    SYMBOL_ANY_CHAR,
+    SYMBOL_ZERO_OR_MORE,
+    SYMBOL_OR,
+    SYMBOL_ESCAPE,
+} SYMBOL_TYPE;
+
+typedef struct Symbol {
+    const char *value;
+    SYMBOL_TYPE type;
+} Symbol;
+
 typedef struct Parser Parser;
 
-extern Parser *Parser_create(Regex *regex);
+extern Parser *Parser_create(const Symbol *symbols, const size_t symbol_count);
 extern void Parser_destroy(Parser *parser);
 
-extern Token *Parser_get_tokens(Parser *parser);
-extern size_t Parser_get_token_count(Parser *parser);
+extern void Parser_match_groups(const Parser *parser,
+                                const Token *tokens,
+                                const size_t token_count);
+
+extern void Parser_match_ranges(const Parser *parser,
+                                const Token *tokens,
+                                const size_t token_count);
+
+extern void Parser_match_escapes(const Parser *parser,
+                                 const Token *tokens,
+                                 const size_t token_count);
 
 #endif

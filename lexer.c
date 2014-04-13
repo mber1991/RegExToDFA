@@ -2,179 +2,47 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
 
 
 struct Lexer {
-    const Symbol *symbols;
-    size_t symbol_count;
+    Token *tokens;
+    size_t token_count;
 };
 
-static void get_delimited_tokens(const Lexer *lexer,
-                                 const Token *tokens,
-                                 const size_t token_count,
-                                 const char *begin_delimeter,
-                                 const char *end_delimeter)
+static Token *init_tokens(Regex *regex)
 {
-    if (lexer == NULL || tokens == NULL) {
-        return;
+    if (regex == NULL) {
+        return NULL;
     }
 
-    unsigned int *indices;
-    indices = malloc(token_count * sizeof(unsigned int));
+    Token *tokens = malloc(sizeof(Token) * Regex_get_length(regex));
 
-    if (indices == NULL) {
-        return;
-    }
-
-    {
+    if (tokens != NULL) {
         unsigned int i;
-        for (i = 0; i < token_count; ++i) {
-            indices[i] = 0;
+        for (i = 0; i < Regex_get_length(regex); ++i) {
+            char *temp = malloc(sizeof(char) * 2);
+            temp[0] = Regex_get_value(regex)[i];
+            temp[1] = '\0';
+            tokens[i].value = temp;
+
+            tokens[i].index = i;
         }
     }
 
-    {
-        int open_count, close_count;
-        open_count = 0;
-        close_count = 0;
-
-        unsigned int i;
-        for (i = 0; i < token_count; ++i) {
-            if (strcmp(tokens[i].value, begin_delimeter) == 0) {
-                indices[i] = 1;
-                ++open_count;
-            }
-            else if (strcmp(tokens[i].value, end_delimeter) == 0) {
-                indices[i] = 2;
-                ++close_count;
-            }
-        }
-
-        if (open_count != close_count) {
-            printf("Invalid input:\n");
-            if (close_count > open_count) {
-                printf("Expected open:  \"%s\"\n", begin_delimeter);
-
-                if (indices != NULL) {
-                    free(indices);
-                    indices = NULL;
-                }
-
-                return;
-            }
-            else if (open_count > close_count) {
-                printf("Expected close:  \"%s\"\n", end_delimeter);
-
-                if (indices != NULL) {
-                    free(indices);
-                    indices = NULL;
-                }
-
-                return;
-            }
-        }
-    }
-
-    {
-        unsigned int i, open_count, close_count;
-        open_count = 0;
-        close_count = 0;
-        printf("{\n");
-        for (i = 0; i < token_count; ++i) {
-            if (indices[i] == 1) {
-                unsigned int j;
-                for (j = i; j < token_count; ++j) {
-                    printf("%4s%-4u=> \"%s\"\n",
-                           "",
-                           j,
-                           tokens[j].value);
-
-                    if (indices[j] == 1) {
-                        ++open_count;
-                    }
-                    else if (indices[j] == 2) {
-                        ++close_count;
-                    }
-
-                    if (open_count == close_count) {
-                        printf("\n");
-                        break;
-                    }
-                }
-            }
-        }
-        printf("}\n");
-    }
-
-    if (indices != NULL) {
-        free(indices);
-        indices = NULL;
-    }
+    return tokens;
 }
 
-static void get_adjacent_tokens(const Lexer *lexer,
-                                const Token *tokens,
-                                const size_t token_count,
-                                const char *delimeter)
+Lexer *Lexer_create(Regex *regex)
 {
-    if (lexer == NULL || tokens == NULL) {
-        return;
+    if (regex == NULL) {
+        return NULL;
     }
 
-    unsigned int *indices;
-    indices = malloc(token_count * sizeof(unsigned int));
-
-    if (indices == NULL) {
-        return;
-    }
-
-    {
-        unsigned int i;
-        for (i = 0; i < token_count; ++i) {
-            indices[i] = 0;
-        }
-    }
-
-    {
-        unsigned int i, found;
-        found = 0;
-        for (i = 0; i < token_count; ++i) {
-            if (found == 1) {
-                indices[i] = 1;
-                found = 0;
-            }
-            else if (strcmp(tokens[i].value, delimeter) == 0) {
-                found = 1;
-            }
-        }
-    }
-
-    {
-        unsigned int i;
-        for (i = 0; i < token_count; ++i) {
-            if (indices[i] == 1 || indices[i] == 2) {
-                printf("%4s%-4u=> \"%s\"\n",
-                       "",
-                       i,
-                       tokens[i].value);
-            }
-        }
-    }
-
-    if (indices != NULL) {
-        free(indices);
-        indices = NULL;
-    }
-}
-
-Lexer *Lexer_create(const Symbol *symbols, const size_t symbol_count)
-{
     Lexer *lexer = malloc(sizeof(Lexer));
 
     if (lexer != NULL) {
-        lexer->symbols = symbols;
-        lexer->symbol_count = symbol_count;
+        lexer->tokens = init_tokens(regex);
+        lexer->token_count = Regex_get_length(regex);
     }
 
     return lexer;
@@ -182,46 +50,40 @@ Lexer *Lexer_create(const Symbol *symbols, const size_t symbol_count)
 
 void Lexer_destroy(Lexer *lexer)
 {
-    if (lexer != NULL) {
-        free(lexer);
-        lexer = NULL;
+    if (lexer == NULL) {
+        return;
     }
+
+    if (lexer->tokens != NULL) {
+        unsigned int i;
+        for (i = 0; i < lexer->token_count; ++i) {
+            if (lexer->tokens[i].value != NULL) {
+                free(lexer->tokens[i].value);
+                lexer->tokens[i].value = NULL;
+            }
+        }
+        free(lexer->tokens);
+        lexer->tokens = NULL;
+    }
+
+    free(lexer);
+    lexer = NULL;
 }
 
-void Lexer_match_groups(const Lexer *lexer,
-                        const Token *tokens,
-                        const size_t token_count)
+Token *Lexer_get_tokens(Lexer *lexer)
 {
-    printf("Groups:\n");
-    get_delimited_tokens(lexer,
-                         tokens,
-                         token_count,
-                         lexer->symbols[SYMBOL_GROUP_BEG].value,
-                         lexer->symbols[SYMBOL_GROUP_END].value);
-    printf("\n");
+    if (lexer == NULL) {
+        return NULL;
+    }
+
+    return lexer->tokens;
 }
 
-void Lexer_match_ranges(const Lexer *lexer,
-                        const Token *tokens,
-                        const size_t token_count)
+size_t Lexer_get_token_count(Lexer *lexer)
 {
-    printf("Ranges:\n");
-    get_delimited_tokens(lexer,
-                         tokens,
-                         token_count,
-                         lexer->symbols[SYMBOL_RANGE_BEG].value,
-                         lexer->symbols[SYMBOL_RANGE_END].value);
-    printf("\n");
-}
+    if (lexer == NULL) {
+        return 0;
+    }
 
-void Lexer_match_escapes(const Lexer *lexer,
-                         const Token *tokens,
-                         const size_t token_count)
-{
-    printf("Escape Characters:\n{\n");
-    get_adjacent_tokens(lexer,
-                       tokens,
-                       token_count,
-                       lexer->symbols[SYMBOL_ESCAPE].value);
-    printf("}\n");
+    return lexer->token_count;
 }
