@@ -224,3 +224,118 @@ void Parser_match_escapes(const Parser *parser,
                         parser->symbols[SYMBOL_ESCAPE].value);
     printf("}\n\n");
 }
+
+void Parser_scan_tokens(const Parser *parser,
+                        const Token *tokens,
+                        const size_t token_count)
+{
+    if (parser == NULL || tokens == NULL) {
+        return;
+    }
+
+    char escape_chars[parser->symbol_count][3];
+    {
+        unsigned int i;
+        for (i = 0; i < parser->symbol_count; ++i) {
+            if (i == 0) {
+                escape_chars[i][0] = '\0';
+            }
+            else {
+                escape_chars[i][0] = parser->symbols[SYMBOL_ESCAPE].value[0];
+                escape_chars[i][1] = parser->symbols[i].value[0];
+                escape_chars[i][2] = '\0';
+            }
+        }
+    }
+
+    unsigned int indices[token_count];
+    {
+        unsigned int i;
+        for (i = 0; i < token_count; ++i) {
+            indices[i] = 0;
+        }
+    }
+
+    {
+        char symbol_buffer[token_count + 1];
+        char literal_buffer[token_count + 1];
+        char output[1024];
+        symbol_buffer[0] = '\0';
+        literal_buffer[0] = '\0';
+        output[0] = '\0';
+
+        unsigned int i;
+        for (i = 0; i < token_count; ++i) {
+            unsigned int j, increment;
+            increment = 0;
+            for (j = i; j < token_count; ++j) {
+                strcat(symbol_buffer, tokens[j].value);
+
+                unsigned int k;
+
+                if (strlen(symbol_buffer) == 2
+                    && symbol_buffer[0] == parser->symbols[SYMBOL_ESCAPE].value[0]
+                ) {
+                    unsigned int match;
+                    match = 0;
+
+                    for (k = 1; k < parser->symbol_count; ++k) {
+                        if (strcmp(symbol_buffer, escape_chars[k]) == 0) {
+                            sprintf(output, "\"%s\", at: %u-%u\n",
+                                    symbol_buffer,
+                                    i, i+1);
+
+                            indices[i] = 2;
+                            if (i < token_count - 1) {
+                                indices[i + 1] = 2;
+                                increment = 1;
+                            }
+                            match = 1;
+                            break;
+                        }
+                    }
+
+                    if (match) {
+                        break;
+                    }
+                }
+
+                for (k = 0; k < parser->symbol_count-1; ++k) {
+                    if (strcmp(symbol_buffer, parser->symbols[k].value) == 0) {
+                        sprintf(output, "\"%s\", at: %u\n",
+                                symbol_buffer,
+                                i);
+
+                        indices[i] = 1;
+                        break;
+                    }
+                }
+            }
+            symbol_buffer[0] = '\0';
+
+            if (indices[i] != 1 && indices[i] != 2) {
+                strcat(literal_buffer, tokens[i].value);
+            }
+            else {
+                if (strlen(literal_buffer) == 1) {
+                    printf("\"%s\", at: %zu\n",
+                           literal_buffer,
+                           i - strlen(literal_buffer));
+                }
+                else if (strlen(literal_buffer) > 1) {
+                    printf("\"%s\", at: %zu-%u\n",
+                           literal_buffer,
+                           i - strlen(literal_buffer),
+                           i - 1);
+                }
+
+                literal_buffer[0] = '\0';
+            }
+
+            printf("%s", output);
+            output[0] = '\0';
+
+            i += increment;
+        }
+    }
+}

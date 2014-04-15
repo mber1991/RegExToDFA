@@ -12,6 +12,7 @@ typedef enum SYMBOL_TYPE {
     SYMBOL_GROUP_END,
     SYMBOL_RANGE_BEG,
     SYMBOL_RANGE_END,
+    SYMBOL_RANGE_THROUGH,
     SYMBOL_ANY_CHAR,
     SYMBOL_ZERO_OR_MORE,
     SYMBOL_OR,
@@ -39,5 +40,9 @@ extern void Parser_match_ranges(const Parser *parser,
 extern void Parser_match_escapes(const Parser *parser,
                                  const Token *tokens,
                                  const size_t token_count);
+
+extern void Parser_scan_tokens(const Parser *parser,
+                               const Token *tokens,
+                               const size_t token_count);
 
 #endif
