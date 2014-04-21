@@ -1,7 +1,6 @@
 #include "lexer.h"
 
 #include <stdlib.h>
-#include <stdio.h>
 
 
 struct Lexer {
@@ -25,7 +24,8 @@ static Token *init_tokens(Regex *regex)
             temp[1] = '\0';
             tokens[i].value = temp;
 
-            tokens[i].index = i;
+            tokens[i].begin = i;
+            tokens[i].end = i;
         }
     }
 

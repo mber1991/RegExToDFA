@@ -4,7 +4,7 @@
 
 typedef struct Token {
     char *value;
-    unsigned int index;
+    unsigned int begin, end;
 } Token;
 
 #endif
