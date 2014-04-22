@@ -11,7 +11,7 @@ int main(int argc, char **argv)
     (void) argc;
     (void) argv;
 
-    unsigned int terminal_states[3] = {
+    const unsigned int terminal_states[3] = {
         1,
         2,
         3,
@@ -26,9 +26,19 @@ int main(int argc, char **argv)
             "dsa2dwad",
             "dsa2dwad",
             "dsa2dwad",
+            "dsa2dwad",
+            "dsa2dwad",
+            "dsa2dwad",
+            "dsa2dwad",
+            "dsa2dwad",
+            "dsa2dwad",
+            "dsa2dwad",
+            "dsa2dwad",
+            "dsa2dwad",
+            "dsa2dwad",
         };
 
-        unsigned int transitions[15] = {
+        const unsigned int transitions[] = {
             1,
             3,
             8,
@@ -47,7 +57,7 @@ int main(int argc, char **argv)
         };
 
         State state;
-        state.symbol_count = 0;
+        state.symbol_count = 15;
         state.symbols = symbols;
         state.transitions = transitions;
 
@@ -63,7 +73,7 @@ int main(int argc, char **argv)
             "dsadsadsa",
         };
 
-        unsigned int transitions[] = {
+        const unsigned int transitions[] = {
             3,
             0,
             3,

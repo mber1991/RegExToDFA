@@ -6,7 +6,7 @@
 struct DFA {
     size_t state_count, terminal_state_count;
     State *states;
-    unsigned int *terminal_states;
+    const unsigned int *terminal_states;
 };
 
 DFA *DFA_create(const size_t state_count,
@@ -16,14 +16,10 @@ DFA *DFA_create(const size_t state_count,
     DFA *dfa = malloc(sizeof(DFA));
 
     dfa->state_count = state_count;
-    dfa->states = malloc(dfa->state_count * sizeof(State));
+    dfa->states = malloc(state_count * sizeof(State));
 
+    dfa->terminal_states = terminal_states;
     dfa->terminal_state_count = terminal_state_count;
-    dfa->terminal_states = malloc(terminal_state_count * sizeof(unsigned int));
-    unsigned int i;
-    for (i = 0; i < terminal_state_count; ++i) {
-        dfa->terminal_states[i] = terminal_states[i];
-    }
 
     return dfa;
 }
@@ -34,11 +30,6 @@ void DFA_destroy(DFA *dfa)
         if (dfa->states != NULL) {
             free(dfa->states);
             dfa->states = NULL;
-        }
-
-        if (dfa->terminal_states != NULL) {
-            free(dfa->terminal_states);
-            dfa->terminal_states = NULL;
         }
 
         free(dfa);
