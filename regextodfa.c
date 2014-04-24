@@ -20,22 +20,12 @@ int main(int argc, char **argv)
     DFA *dfa = DFA_create(20, terminal_states, 3);
 
     {
-        unsigned int symbols[15] = {
-            'a',
-            'e',
-            'd',
-            'c',
-            'z',
-            'g',
-            'j',
-            's',
-            'p',
-            'l',
-            'a',
-            'k',
-            'l',
-            'd',
-            'p',
+        const char *symbols[] = {
+            "dsa2dwad",
+            "dsa2dwad",
+            "dsa2dwad",
+            "dsa2dwad",
+            "dsa2dwad",
         };
 
         unsigned int transitions[15] = {
@@ -65,15 +55,15 @@ int main(int argc, char **argv)
     }
 
     {
-        unsigned int symbols[5] = {
-            'p',
-            'j',
-            's',
-            'z',
-            'n',
+        const char *symbols[] = {
+            "dsadsadsa",
+            "dsadsadsa",
+            "dsadsadsa",
+            "dsadsadsa",
+            "dsadsadsa",
         };
 
-        unsigned int transitions[5] = {
+        unsigned int transitions[] = {
             3,
             0,
             3,
@@ -81,7 +71,8 @@ int main(int argc, char **argv)
             2,
         };
 
-        State *state = State_create(5, symbols, transitions);
+        State *state;
+        state = State_create(5, symbols, transitions);
 
         DFA_set_state(dfa, 1, state);
 

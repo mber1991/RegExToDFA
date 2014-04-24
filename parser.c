@@ -337,12 +337,12 @@ void Parser_scan_tokens(const Parser *parser,
         else {
             if (strlen(literal_buffer) == 1) {
                 sprintf(literal_match, "%s", literal_buffer);
-                literal_match_begin = i - strlen(literal_buffer);
+                literal_match_begin = i - (unsigned int) strlen(literal_buffer);
                 literal_match_end = literal_match_begin;
             }
             else if (strlen(literal_buffer) > 1) {
                 sprintf(literal_match, "%s", literal_buffer);
-                literal_match_begin = i - strlen(literal_buffer);
+                literal_match_begin = i - (unsigned int) strlen(literal_buffer);
                 literal_match_end = i - 1;
             }
 

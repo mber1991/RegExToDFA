@@ -6,12 +6,12 @@
 
 typedef struct State {
     size_t symbol_count;
-    unsigned int *symbols;
-    unsigned int *transitions;
+    const char **symbols;
+    const unsigned int *transitions;
 } State;
 
 extern State *State_create(const size_t symbol_count,
-                           const unsigned int *symbols,
+                           const char **symbols,
                            const unsigned int *transitions);
 extern void State_destroy(State *state);
 
