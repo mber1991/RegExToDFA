@@ -35,6 +35,22 @@ static void to_string(List *l)
                     printf("-%u", token->end);
                 }
 
+                switch (token->type) {
+                    case TOKEN_SYMBOL:
+                        printf(", type: Symbol");
+                        break;
+                    case TOKEN_LITERAL:
+                        printf(", type: Literal");
+                        break;
+                    case TOKEN_ESCAPE_CHAR:
+                        printf(", type: Escape Character");
+                        break;
+                    case TOKEN_UNKNOWN:
+                        printf(", type: Unknown");
+                        break;
+                    default:
+                        break;
+                }
                 printf("\n");
             }
         }

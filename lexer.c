@@ -26,6 +26,8 @@ static Token *init_tokens(Regex *regex)
 
             tokens[i].begin = i;
             tokens[i].end = i;
+
+            tokens[i].type = TOKEN_UNKNOWN;
         }
     }
 
