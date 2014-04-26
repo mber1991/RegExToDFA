@@ -80,6 +80,33 @@ static Node *end(Node *n)
     return temp;
 }
 
+static Node *get_node_at_index(Node *n, unsigned int index)
+{
+    if (n == NULL) {
+        return NULL;
+    }
+
+    unsigned int i;
+    i = 0;
+
+    Node *temp = n;
+
+    while (temp->next != NULL) {
+        if (i == index) {
+            return temp;
+        }
+
+        temp = temp->next;
+        ++i;
+    }
+
+    if (i == index) {
+        return temp;
+    }
+
+    return NULL;
+}
+
 Node *Node_create(void *data)
 {
     Node *node = malloc(sizeof(*node));
@@ -149,4 +176,22 @@ void List_push_back(List *l, Node *n)
     }
 
     end(l->head)->next = n;
+}
+
+void *List_get_data(List *l, unsigned int index)
+{
+    if (l == NULL || l->head == NULL) {
+        return NULL;
+    }
+
+    Node *node;
+    node = get_node_at_index(l->head, index);
+
+    if (node != NULL) {
+        if (node->data != NULL) {
+            return node->data;
+        }
+    }
+
+    return NULL;
 }
