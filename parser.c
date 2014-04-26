@@ -8,108 +8,56 @@
 
 
 struct Parser {
+    List *token_list;
     const Symbol *symbols;
     size_t symbol_count;
 };
 
 static void get_delimited_tokens(const Parser *parser,
-                                 const Token *tokens,
-                                 const size_t token_count,
-                                 const char *begin_delimeter,
-                                 const char *end_delimeter)
+                                 const Symbol beg,
+                                 const Symbol end)
 {
-    if (parser == NULL || tokens == NULL) {
+    if (parser == NULL) {
         return;
     }
 
-    unsigned int *indices;
-    indices = malloc(token_count * sizeof(unsigned int));
+    Token *token;
+    token = NULL;
 
-    if (indices == NULL) {
-        return;
-    }
+    unsigned int i, open_count, close_count;
+    i = 0;
+    open_count = 0;
+    close_count = 0;
 
-    {
-        unsigned int i;
-        for (i = 0; i < token_count; ++i) {
-            indices[i] = 0;
-        }
-    }
+    while ((token = List_get_data(parser->token_list, i)) != NULL) {
+        if (strcmp(token->value, beg.value) == 0) {
+            unsigned int j;
+            j = i;
+            Token *temp;
+            temp = NULL;
+            while ((temp = List_get_data(parser->token_list, j)) != NULL) {
+                printf("%4s%-4u=> \"%s\"\n",
+                       "",
+                       j,
+                       temp->value);
 
-    {
-        int open_count, close_count;
-        open_count = 0;
-        close_count = 0;
-
-        unsigned int i;
-        for (i = 0; i < token_count; ++i) {
-            if (strcmp(tokens[i].value, begin_delimeter) == 0) {
-                indices[i] = 1;
-                ++open_count;
-            }
-            else if (strcmp(tokens[i].value, end_delimeter) == 0) {
-                indices[i] = 2;
-                ++close_count;
-            }
-        }
-
-        if (open_count != close_count) {
-            printf("Invalid input:\n");
-            if (close_count > open_count) {
-                printf("Expected open:  \"%s\"\n", begin_delimeter);
-
-                if (indices != NULL) {
-                    free(indices);
-                    indices = NULL;
+                if (strcmp(temp->value, beg.value) == 0) {
+                    ++open_count;
+                }
+                if (strcmp(temp->value, end.value) == 0) {
+                    ++close_count;
                 }
 
-                return;
-            }
-            else if (open_count > close_count) {
-                printf("Expected close:  \"%s\"\n", end_delimeter);
-
-                if (indices != NULL) {
-                    free(indices);
-                    indices = NULL;
+                if (open_count == close_count) {
+                    printf("\n");
+                    break;
                 }
 
-                return;
+                ++j;
             }
         }
-    }
 
-    {
-        unsigned int i, open_count, close_count;
-        open_count = 0;
-        close_count = 0;
-        for (i = 0; i < token_count; ++i) {
-            if (indices[i] == 1) {
-                unsigned int j;
-                for (j = i; j < token_count; ++j) {
-                    printf("%4s%-4u=> \"%s\"\n",
-                           "",
-                           j,
-                           tokens[j].value);
-
-                    if (indices[j] == 1) {
-                        ++open_count;
-                    }
-                    else if (indices[j] == 2) {
-                        ++close_count;
-                    }
-
-                    if (open_count == close_count) {
-                        printf("\n");
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
-    if (indices != NULL) {
-        free(indices);
-        indices = NULL;
+        ++i;
     }
 }
 
@@ -120,6 +68,7 @@ Parser *Parser_create(const Symbol *symbols, const size_t symbol_count)
     if (parser != NULL) {
         parser->symbols = symbols;
         parser->symbol_count = symbol_count;
+        parser->token_list = List_create();
     }
 
     return parser;
@@ -128,34 +77,27 @@ Parser *Parser_create(const Symbol *symbols, const size_t symbol_count)
 void Parser_destroy(Parser *parser)
 {
     if (parser != NULL) {
+        List_destroy(parser->token_list);
         free(parser);
         parser = NULL;
     }
 }
 
-void Parser_match_groups(const Parser *parser,
-                         const Token *tokens,
-                         const size_t token_count)
+void Parser_match_groups(const Parser *parser)
 {
     printf("Groups:\n{\n");
     get_delimited_tokens(parser,
-                         tokens,
-                         token_count,
-                         parser->symbols[SYMBOL_GROUP_BEG].value,
-                         parser->symbols[SYMBOL_GROUP_END].value);
+                         parser->symbols[SYMBOL_GROUP_BEG],
+                         parser->symbols[SYMBOL_GROUP_END]);
     printf("}\n\n");
 }
 
-void Parser_match_ranges(const Parser *parser,
-                         const Token *tokens,
-                         const size_t token_count)
+void Parser_match_ranges(const Parser *parser)
 {
     printf("Ranges:\n{\n");
     get_delimited_tokens(parser,
-                         tokens,
-                         token_count,
-                         parser->symbols[SYMBOL_RANGE_BEG].value,
-                         parser->symbols[SYMBOL_RANGE_END].value);
+                         parser->symbols[SYMBOL_RANGE_BEG],
+                         parser->symbols[SYMBOL_RANGE_END]);
     printf("}\n\n");
 }
 
@@ -208,13 +150,6 @@ void Parser_scan_tokens(const Parser *parser,
     literal_match_end = 0;
     symbol_match_type = TOKEN_UNKNOWN;
     literal_match_type = TOKEN_UNKNOWN;
-
-    List *list;
-    list = List_create();
-
-    if (list == NULL) {
-        return;
-    }
 
     unsigned int i;
     for (i = 0; i < token_count; ++i) {
@@ -299,7 +234,6 @@ void Parser_scan_tokens(const Parser *parser,
                 if (token != NULL) {
                     token->value = malloc(sizeof(char) * (strlen(literal_match) + 1));
                     if (token->value == NULL) {
-                        List_destroy(list);
                         free(token);
                         token = NULL;
                         return;
@@ -313,11 +247,7 @@ void Parser_scan_tokens(const Parser *parser,
 
                     token->type = literal_match_type;
 
-                    Node *node;
-                    node = Node_create(token);
-                    if (node != NULL) {
-                        List_push_back(list, node);
-                    }
+                    List_push_back(parser->token_list, token);
                 }
             }
         }
@@ -330,7 +260,6 @@ void Parser_scan_tokens(const Parser *parser,
                 if (token != NULL) {
                     token->value = malloc(sizeof(char) * (strlen(symbol_match) + 1));
                     if (token->value == NULL) {
-                        List_destroy(list);
                         free(token);
                         token = NULL;
                         return;
@@ -344,11 +273,7 @@ void Parser_scan_tokens(const Parser *parser,
 
                     token->type = symbol_match_type;
 
-                    Node *node;
-                    node = Node_create(token);
-                    if (node != NULL) {
-                        List_push_back(list, node);
-                    }
+                    List_push_back(parser->token_list, token);
                 }
             }
         }
@@ -358,6 +283,4 @@ void Parser_scan_tokens(const Parser *parser,
 
         i += increment;
     }
-
-    List_destroy(list);
 }

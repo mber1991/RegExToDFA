@@ -164,9 +164,15 @@ void List_destroy(List *list)
     }
 }
 
-void List_push_back(List *l, Node *n)
+void List_push_back(List *l, void *data)
 {
-    if (l == NULL || n == NULL) {
+    if (l == NULL || data == NULL) {
+        return;
+    }
+
+    Node *n;
+    n = Node_create(data);
+    if (n == NULL) {
         return;
     }
 

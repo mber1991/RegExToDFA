@@ -119,17 +119,13 @@ int main(int argc, char **argv)
     Parser *parser;
     parser = Parser_create(symbols, 10);
 
-    // Parser_match_groups(parser,
-    //                     Lexer_get_tokens(lexer),
-    //                     Lexer_get_token_count(lexer));
-
-    // Parser_match_ranges(parser,
-    //                     Lexer_get_tokens(lexer),
-    //                     Lexer_get_token_count(lexer));
-
     Parser_scan_tokens(parser,
                        Lexer_get_tokens(lexer),
                        Lexer_get_token_count(lexer));
+
+    Parser_match_groups(parser);
+
+    Parser_match_ranges(parser);
 
     Regex_destroy(regex);
     Lexer_destroy(lexer);

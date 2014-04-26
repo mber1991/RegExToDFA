@@ -12,7 +12,7 @@ extern void Node_destroy(Node *n);
 extern List *List_create(void);
 extern void List_destroy(List *l);
 
-extern void List_push_back(List *l, Node *n);
+extern void List_push_back(List *l, void *data);
 
 extern void *List_get_data(List *l, unsigned int index);
 
