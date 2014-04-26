@@ -113,62 +113,6 @@ static void get_delimited_tokens(const Parser *parser,
     }
 }
 
-static void get_adjacent_tokens(const Parser *parser,
-                                const Token *tokens,
-                                const size_t token_count,
-                                const char *delimeter)
-{
-    if (parser == NULL || tokens == NULL) {
-        return;
-    }
-
-    unsigned int *indices;
-    indices = malloc(token_count * sizeof(unsigned int));
-
-    if (indices == NULL) {
-        return;
-    }
-
-    {
-        unsigned int i;
-        for (i = 0; i < token_count; ++i) {
-            indices[i] = 0;
-        }
-    }
-
-    {
-        unsigned int i, found;
-        found = 0;
-        for (i = 0; i < token_count; ++i) {
-            if (found == 1) {
-                indices[i] = 2;
-                found = 0;
-            }
-            else if (strcmp(tokens[i].value, delimeter) == 0) {
-                indices[i] = 1;
-                found = 1;
-            }
-        }
-    }
-
-    {
-        unsigned int i;
-        for (i = 0; i < token_count; ++i) {
-            if (indices[i] == 1 || indices[i] == 2) {
-                printf("%4s%-4u=> \"%s\"\n",
-                       "",
-                       i,
-                       tokens[i].value);
-            }
-        }
-    }
-
-    if (indices != NULL) {
-        free(indices);
-        indices = NULL;
-    }
-}
-
 Parser *Parser_create(const Symbol *symbols, const size_t symbol_count)
 {
     Parser *parser = malloc(sizeof(Parser));
@@ -212,18 +156,6 @@ void Parser_match_ranges(const Parser *parser,
                          token_count,
                          parser->symbols[SYMBOL_RANGE_BEG].value,
                          parser->symbols[SYMBOL_RANGE_END].value);
-    printf("}\n\n");
-}
-
-void Parser_match_escapes(const Parser *parser,
-                          const Token *tokens,
-                          const size_t token_count)
-{
-    printf("Escape Characters:\n{\n");
-    get_adjacent_tokens(parser,
-                        tokens,
-                        token_count,
-                        parser->symbols[SYMBOL_ESCAPE].value);
     printf("}\n\n");
 }
 

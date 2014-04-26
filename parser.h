@@ -37,10 +37,6 @@ extern void Parser_match_ranges(const Parser *parser,
                                 const Token *tokens,
                                 const size_t token_count);
 
-extern void Parser_match_escapes(const Parser *parser,
-                                 const Token *tokens,
-                                 const size_t token_count);
-
 extern void Parser_scan_tokens(const Parser *parser,
                                const Token *tokens,
                                const size_t token_count);

@@ -127,10 +127,6 @@ int main(int argc, char **argv)
     //                     Lexer_get_tokens(lexer),
     //                     Lexer_get_token_count(lexer));
 
-    // Parser_match_escapes(parser,
-    //                      Lexer_get_tokens(lexer),
-    //                      Lexer_get_token_count(lexer));
-
     Parser_scan_tokens(parser,
                        Lexer_get_tokens(lexer),
                        Lexer_get_token_count(lexer));
