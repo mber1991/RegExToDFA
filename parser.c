@@ -201,12 +201,13 @@ void Parser_scan_tokens(const Parser *parser,
 
     unsigned int symbol_match_begin, symbol_match_end;
     unsigned int literal_match_begin, literal_match_end;
-    TOKEN_TYPE match_type;
+    TOKEN_TYPE symbol_match_type, literal_match_type;
     symbol_match_begin = 0;
     symbol_match_end = 0;
     literal_match_begin = 0;
     literal_match_end = 0;
-    match_type = TOKEN_UNKNOWN;
+    symbol_match_type = TOKEN_UNKNOWN;
+    literal_match_type = TOKEN_UNKNOWN;
 
     List *list;
     list = List_create();
@@ -236,7 +237,7 @@ void Parser_scan_tokens(const Parser *parser,
                         symbol_match_begin = i;
                         symbol_match_end = i + 1;
 
-                        match_type = TOKEN_ESCAPE_CHAR;
+                        symbol_match_type = TOKEN_ESCAPE_CHAR;
 
                         indices[i] = 2;
                         if (i < token_count - 1) {
@@ -260,7 +261,7 @@ void Parser_scan_tokens(const Parser *parser,
                     symbol_match_begin = i;
                     symbol_match_end = i;
 
-                    match_type = TOKEN_SYMBOL;
+                    symbol_match_type = TOKEN_SYMBOL;
 
                     indices[i] = 1;
 
@@ -278,13 +279,13 @@ void Parser_scan_tokens(const Parser *parser,
                 sprintf(literal_match, "%s", literal_buffer);
                 literal_match_begin = i - (unsigned int) strlen(literal_buffer);
                 literal_match_end = literal_match_begin;
-                match_type = TOKEN_LITERAL;
+                literal_match_type = TOKEN_LITERAL;
             }
             else if (strlen(literal_buffer) > 1) {
                 sprintf(literal_match, "%s", literal_buffer);
                 literal_match_begin = i - (unsigned int) strlen(literal_buffer);
                 literal_match_end = i - 1;
-                match_type = TOKEN_LITERAL;
+                literal_match_type = TOKEN_LITERAL;
             }
 
             literal_buffer[0] = '\0';
@@ -310,7 +311,7 @@ void Parser_scan_tokens(const Parser *parser,
                     token->begin = literal_match_begin;
                     token->end = literal_match_end;
 
-                    token->type = match_type;
+                    token->type = literal_match_type;
 
                     Node *node;
                     node = Node_create(token);
@@ -341,7 +342,7 @@ void Parser_scan_tokens(const Parser *parser,
                     token->begin = symbol_match_begin;
                     token->end = symbol_match_end;
 
-                    token->type = match_type;
+                    token->type = symbol_match_type;
 
                     Node *node;
                     node = Node_create(token);
