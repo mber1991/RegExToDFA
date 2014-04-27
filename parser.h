@@ -29,10 +29,6 @@ typedef struct Parser Parser;
 extern Parser *Parser_create(const Symbol *symbols, const size_t symbol_count);
 extern void Parser_destroy(Parser *parser);
 
-extern void Parser_match_groups(const Parser *parser);
-
-extern void Parser_match_ranges(const Parser *parser);
-
 extern void Parser_scan_tokens(Parser *parser,
                                const Token *tokens,
                                const size_t token_count);

@@ -166,75 +166,7 @@ static void init_ranges(Parser *parser)
     }
 }
 
-Parser *Parser_create(const Symbol *symbols, const size_t symbol_count)
-{
-    Parser *parser = malloc(sizeof(Parser));
-
-    if (parser != NULL) {
-        parser->symbols = symbols;
-        parser->symbol_count = symbol_count;
-        parser->token_list = List_create();
-
-        parser->groups = NULL;
-        parser->ranges = NULL;
-
-        parser->group_count = 0;
-        parser->range_count = 0;
-    }
-
-    return parser;
-}
-
-void Parser_destroy(Parser *parser)
-{
-    if (parser != NULL) {
-        List_destroy(parser->token_list, (Destructor) Token_destroy);
-
-        if (parser->groups != NULL) {
-            unsigned int i;
-            for (i = 0; i < parser->group_count; ++i) {
-                List_destroy(parser->groups[i], (Destructor) Token_destroy);
-            }
-            free(parser->groups);
-            parser->groups = NULL;
-        }
-
-        if (parser->ranges != NULL) {
-            unsigned int i;
-            for (i = 0; i < parser->range_count; ++i) {
-                List_destroy(parser->ranges[i], (Destructor) Token_destroy);
-            }
-            free(parser->ranges);
-            parser->ranges = NULL;
-        }
-
-        free(parser);
-        parser = NULL;
-    }
-}
-
-void Parser_match_groups(const Parser *parser)
-{
-    printf("Groups:\n{\n");
-
-    get_delimited_tokens(parser,
-                         parser->symbols[SYMBOL_GROUP_BEG],
-                         parser->symbols[SYMBOL_GROUP_END],
-                         parser->groups);
-    printf("}\n\n");
-}
-
-void Parser_match_ranges(const Parser *parser)
-{
-    printf("Ranges:\n{\n");
-    get_delimited_tokens(parser,
-                         parser->symbols[SYMBOL_RANGE_BEG],
-                         parser->symbols[SYMBOL_RANGE_END],
-                         parser->ranges);
-    printf("}\n\n");
-}
-
-void Parser_scan_tokens(Parser *parser,
+static void init_tokens(Parser *parser,
                         const Token *tokens,
                         const size_t token_count)
 {
@@ -386,7 +318,69 @@ void Parser_scan_tokens(Parser *parser,
 
         i += increment;
     }
+}
+Parser *Parser_create(const Symbol *symbols, const size_t symbol_count)
+{
+    Parser *parser = malloc(sizeof(Parser));
+
+    if (parser != NULL) {
+        parser->symbols = symbols;
+        parser->symbol_count = symbol_count;
+        parser->token_list = List_create();
+
+        parser->groups = NULL;
+        parser->ranges = NULL;
+
+        parser->group_count = 0;
+        parser->range_count = 0;
+    }
+
+    return parser;
+}
+
+void Parser_destroy(Parser *parser)
+{
+    if (parser != NULL) {
+        List_destroy(parser->token_list, (Destructor) Token_destroy);
+
+        if (parser->groups != NULL) {
+            unsigned int i;
+            for (i = 0; i < parser->group_count; ++i) {
+                List_destroy(parser->groups[i], (Destructor) Token_destroy);
+            }
+            free(parser->groups);
+            parser->groups = NULL;
+        }
+
+        if (parser->ranges != NULL) {
+            unsigned int i;
+            for (i = 0; i < parser->range_count; ++i) {
+                List_destroy(parser->ranges[i], (Destructor) Token_destroy);
+            }
+            free(parser->ranges);
+            parser->ranges = NULL;
+        }
+
+        free(parser);
+        parser = NULL;
+    }
+}
+
+void Parser_scan_tokens(Parser *parser,
+                        const Token *tokens,
+                        const size_t token_count)
+{
+    init_tokens(parser, tokens, token_count);
 
     init_groups(parser);
+    get_delimited_tokens(parser,
+                         parser->symbols[SYMBOL_GROUP_BEG],
+                         parser->symbols[SYMBOL_GROUP_END],
+                         parser->groups);
+
     init_ranges(parser);
+    get_delimited_tokens(parser,
+                         parser->symbols[SYMBOL_RANGE_BEG],
+                         parser->symbols[SYMBOL_RANGE_END],
+                         parser->ranges);
 }

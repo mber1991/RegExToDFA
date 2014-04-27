@@ -123,10 +123,6 @@ int main(int argc, char **argv)
                        Lexer_get_tokens(lexer),
                        Lexer_get_token_count(lexer));
 
-    Parser_match_groups(parser);
-
-    Parser_match_ranges(parser);
-
     Regex_destroy(regex);
     Lexer_destroy(lexer);
     Parser_destroy(parser);
