@@ -5,29 +5,35 @@
 #include <string.h>
 
 #include "list.h"
+#include "token.h"
 
 
 struct Parser {
     List *token_list;
+    List **groups, **ranges;
+    size_t group_count, range_count;
     const Symbol *symbols;
     size_t symbol_count;
 };
 
-static void get_delimited_tokens(const Parser *parser,
-                                 const Symbol beg,
-                                 const Symbol end)
+static size_t get_delimeted_group_count(const Parser *parser,
+                                        const Symbol beg,
+                                        const Symbol end)
 {
     if (parser == NULL) {
-        return;
+        return 0;
     }
-
-    Token *token;
-    token = NULL;
 
     unsigned int i, open_count, close_count;
     i = 0;
     open_count = 0;
     close_count = 0;
+
+    size_t group_count;
+    group_count = 0;
+
+    Token *token;
+    token = NULL;
 
     while ((token = List_get_data(parser->token_list, i)) != NULL) {
         if (strcmp(token->value, beg.value) == 0) {
@@ -36,10 +42,63 @@ static void get_delimited_tokens(const Parser *parser,
             Token *temp;
             temp = NULL;
             while ((temp = List_get_data(parser->token_list, j)) != NULL) {
+                if (strcmp(temp->value, beg.value) == 0) {
+                    ++open_count;
+                }
+                if (strcmp(temp->value, end.value) == 0) {
+                    ++close_count;
+                }
+                if (open_count == close_count) {
+                    ++group_count;
+                    break;
+                }
+
+                ++j;
+            }
+        }
+
+        ++i;
+    }
+
+    return group_count;
+}
+
+static void get_delimited_tokens(const Parser *parser,
+                                 const Symbol beg,
+                                 const Symbol end,
+                                 List **out)
+{
+    if (parser == NULL || out == NULL) {
+        return;
+    }
+
+    Token *token;
+    token = NULL;
+
+    unsigned int i, open_count, close_count, group_index;
+    i = 0;
+    open_count = 0;
+    close_count = 0;
+    group_index = 0;
+
+    while ((token = List_get_data(parser->token_list, i)) != NULL) {
+        if (strcmp(token->value, beg.value) == 0) {
+            unsigned int j;
+            j = i;
+            Token *temp;
+            temp = NULL;
+            while ((temp = List_get_data(parser->token_list, j)) != NULL) {
+                Token *match;
+                match = Token_create(temp->value,
+                                     temp->begin, temp->end,
+                                     temp->type);
+
+                List_push_back(out[group_index], match);
+
                 printf("%4s%-4u=> \"%s\"\n",
                        "",
                        j,
-                       temp->value);
+                       match->value);
 
                 if (strcmp(temp->value, beg.value) == 0) {
                     ++open_count;
@@ -50,6 +109,8 @@ static void get_delimited_tokens(const Parser *parser,
 
                 if (open_count == close_count) {
                     printf("\n");
+
+                    ++group_index;
                     break;
                 }
 
@@ -61,6 +122,50 @@ static void get_delimited_tokens(const Parser *parser,
     }
 }
 
+static void init_groups(Parser *parser)
+{
+    if (parser == NULL) {
+        return;
+    }
+
+    if (parser->groups == NULL) {
+        parser->group_count = get_delimeted_group_count(
+            parser,
+            parser->symbols[SYMBOL_GROUP_BEG],
+            parser->symbols[SYMBOL_GROUP_END]);
+
+        parser->groups = malloc(parser->group_count * sizeof(List *));
+        if (parser->groups != NULL) {
+            unsigned int i;
+            for (i = 0; i < parser->group_count; ++i) {
+                parser->groups[i] = List_create();
+            }
+        }
+    }
+}
+
+static void init_ranges(Parser *parser)
+{
+    if (parser == NULL) {
+        return;
+    }
+
+    if (parser->ranges == NULL) {
+        parser->range_count = get_delimeted_group_count(
+            parser,
+            parser->symbols[SYMBOL_RANGE_BEG],
+            parser->symbols[SYMBOL_RANGE_END]);
+
+        parser->ranges = malloc(parser->range_count * sizeof(List *));
+        if (parser->ranges != NULL) {
+            unsigned int i;
+            for (i = 0; i < parser->range_count; ++i) {
+                parser->ranges[i] = List_create();
+            }
+        }
+    }
+}
+
 Parser *Parser_create(const Symbol *symbols, const size_t symbol_count)
 {
     Parser *parser = malloc(sizeof(Parser));
@@ -69,6 +174,12 @@ Parser *Parser_create(const Symbol *symbols, const size_t symbol_count)
         parser->symbols = symbols;
         parser->symbol_count = symbol_count;
         parser->token_list = List_create();
+
+        parser->groups = NULL;
+        parser->ranges = NULL;
+
+        parser->group_count = 0;
+        parser->range_count = 0;
     }
 
     return parser;
@@ -77,7 +188,26 @@ Parser *Parser_create(const Symbol *symbols, const size_t symbol_count)
 void Parser_destroy(Parser *parser)
 {
     if (parser != NULL) {
-        List_destroy(parser->token_list);
+        List_destroy(parser->token_list, (Destructor) Token_destroy);
+
+        if (parser->groups != NULL) {
+            unsigned int i;
+            for (i = 0; i < parser->group_count; ++i) {
+                List_destroy(parser->groups[i], (Destructor) Token_destroy);
+            }
+            free(parser->groups);
+            parser->groups = NULL;
+        }
+
+        if (parser->ranges != NULL) {
+            unsigned int i;
+            for (i = 0; i < parser->range_count; ++i) {
+                List_destroy(parser->ranges[i], (Destructor) Token_destroy);
+            }
+            free(parser->ranges);
+            parser->ranges = NULL;
+        }
+
         free(parser);
         parser = NULL;
     }
@@ -86,9 +216,11 @@ void Parser_destroy(Parser *parser)
 void Parser_match_groups(const Parser *parser)
 {
     printf("Groups:\n{\n");
+
     get_delimited_tokens(parser,
                          parser->symbols[SYMBOL_GROUP_BEG],
-                         parser->symbols[SYMBOL_GROUP_END]);
+                         parser->symbols[SYMBOL_GROUP_END],
+                         parser->groups);
     printf("}\n\n");
 }
 
@@ -97,11 +229,12 @@ void Parser_match_ranges(const Parser *parser)
     printf("Ranges:\n{\n");
     get_delimited_tokens(parser,
                          parser->symbols[SYMBOL_RANGE_BEG],
-                         parser->symbols[SYMBOL_RANGE_END]);
+                         parser->symbols[SYMBOL_RANGE_END],
+                         parser->ranges);
     printf("}\n\n");
 }
 
-void Parser_scan_tokens(const Parser *parser,
+void Parser_scan_tokens(Parser *parser,
                         const Token *tokens,
                         const size_t token_count)
 {
@@ -190,7 +323,7 @@ void Parser_scan_tokens(const Parser *parser,
                 }
             }
 
-            for (k = 0; k < parser->symbol_count-1; ++k) {
+            for (k = 1; k < parser->symbol_count; ++k) {
                 if (strcmp(symbol_buffer, parser->symbols[k].value) == 0) {
                     sprintf(symbol_match, "%s", symbol_buffer);
                     symbol_match_begin = i;
@@ -229,52 +362,22 @@ void Parser_scan_tokens(const Parser *parser,
         {
             if (literal_match[0] != '\0') {
                 Token *token;
-                token = malloc(sizeof(Token));
+                token = Token_create(literal_match,
+                                     literal_match_begin, literal_match_end,
+                                     literal_match_type);
 
-                if (token != NULL) {
-                    token->value = malloc(sizeof(char) * (strlen(literal_match) + 1));
-                    if (token->value == NULL) {
-                        free(token);
-                        token = NULL;
-                        return;
-                    }
-
-                    token->value[0] = '\0';
-                    strcat(token->value, literal_match);
-
-                    token->begin = literal_match_begin;
-                    token->end = literal_match_end;
-
-                    token->type = literal_match_type;
-
-                    List_push_back(parser->token_list, token);
-                }
+                List_push_back(parser->token_list, token);
             }
         }
 
         {
             if (symbol_match[0] != '\0') {
                 Token *token;
-                token = malloc(sizeof(Token));
+                token = Token_create(symbol_match,
+                                     symbol_match_begin, symbol_match_end,
+                                     symbol_match_type);
 
-                if (token != NULL) {
-                    token->value = malloc(sizeof(char) * (strlen(symbol_match) + 1));
-                    if (token->value == NULL) {
-                        free(token);
-                        token = NULL;
-                        return;
-                    }
-
-                    token->value[0] = '\0';
-                    strcat(token->value, symbol_match);
-
-                    token->begin = symbol_match_begin;
-                    token->end = symbol_match_end;
-
-                    token->type = symbol_match_type;
-
-                    List_push_back(parser->token_list, token);
-                }
+                List_push_back(parser->token_list, token);
             }
         }
 
@@ -283,4 +386,7 @@ void Parser_scan_tokens(const Parser *parser,
 
         i += increment;
     }
+
+    init_groups(parser);
+    init_ranges(parser);
 }

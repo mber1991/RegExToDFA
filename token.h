@@ -15,4 +15,10 @@ typedef struct Token {
     TOKEN_TYPE type;
 } Token;
 
+
+extern Token *Token_create(const char *value,
+                           const unsigned int begin, const unsigned int end,
+                           const TOKEN_TYPE type);
+extern void Token_destroy(Token *token);
+
 #endif

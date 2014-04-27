@@ -119,17 +119,11 @@ Node *Node_create(void *data)
     return node;
 }
 
-void Node_destroy(Node *node)
+void Node_destroy(Node *node, Destructor destructor)
 {
     if (node != NULL) {
         if (node->data != NULL) {
-            Token *token = node->data;
-            if (token->value != NULL) {
-                free(token->value);
-                token->value = NULL;
-            }
-            free(token);
-            token = NULL;
+            destructor(node->data);
         }
 
         free(node);
@@ -148,14 +142,14 @@ List *List_create(void)
     return list;
 }
 
-void List_destroy(List *list)
+void List_destroy(List *list, Destructor destructor)
 {
     if (list != NULL) {
-        to_string(list);
+        // to_string(list);
 
         while (list->head != NULL) {
             Node *n = list->head->next;
-            Node_destroy(list->head);
+            Node_destroy(list->head, destructor);
             list->head = n;
         }
 
