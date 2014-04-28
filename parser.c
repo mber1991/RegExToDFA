@@ -124,6 +124,94 @@ static void get_delimited_tokens(const Parser *parser,
     }
 }
 
+static void get_modified_tokens(const Parser *parser,
+                                const Symbol beg, const Symbol end,
+                                const Symbol modifier,
+                                List ***out, size_t *out_size)
+{
+    if (parser == NULL || out == NULL || out_size == NULL) {
+        return;
+    }
+
+    get_delimited_tokens(parser,
+                         beg,
+                         modifier,
+                         (*out));
+
+    unsigned int indices[(*out_size)];
+    {
+        unsigned int i;
+        for (i = 0; i < (*out_size); ++i) {
+            indices[i] = 0;
+        }
+    }
+
+    unsigned int match_count;
+    match_count = 0;
+
+    unsigned int k;
+    for (k = 0; k < (*out_size); ++k) {
+        size_t size = List_get_size((*out)[k]);
+        if (size > 0) {
+            Token *token;
+            token = List_get_data((*out)[k], size - 1);
+            if (strcmp(token->value, end.value) == 0) {
+                indices[k] = 1;
+                ++match_count;
+            }
+        }
+    }
+
+    List **temp_list;
+    temp_list = malloc(match_count * sizeof(List *));
+    if (temp_list != NULL) {
+        unsigned int i;
+        for (i = 0; i < match_count; ++i) {
+            temp_list[i] = List_create();
+        }
+    }
+
+    unsigned int group_index;
+    group_index = 0;
+
+    for (k = 0; k < (*out_size); ++k) {
+        if (indices[k] == 1) {
+            Token *token;
+            token = NULL;
+
+            unsigned int i;
+            i = 0;
+
+            while ((token = List_get_data((*out)[k], i)) != NULL) {
+                Token *temp;
+                temp = Token_create(token->value,
+                                    token->begin, token->end,
+                                    token->type);
+                if (temp != NULL) {
+                    List_push_back(temp_list[group_index], temp);
+                }
+
+                ++i;
+            }
+
+            ++group_index;
+        }
+    }
+
+    if ((*out) != NULL) {
+        unsigned int i;
+        for (i = 0; i < (*out_size); ++i) {
+            List_destroy((*out)[i],
+                         (Destructor) Token_destroy);
+        }
+        free((*out));
+        (*out) = NULL;
+    }
+
+    (*out_size) = match_count;
+    (*out) = temp_list;
+}
+
 static void init_groups(Parser *parser)
 {
     if (parser == NULL) {
@@ -171,83 +259,85 @@ static void init_zero_or_more_groups(Parser *parser)
             }
         }
 
-        get_delimited_tokens(parser,
-                             parser->symbols[SYMBOL_GROUP_BEG],
-                             parser->symbols[SYMBOL_ZERO_OR_MORE],
-                             parser->zero_or_more_groups);
+        get_modified_tokens(parser,
+                            parser->symbols[SYMBOL_GROUP_BEG],
+                            parser->symbols[SYMBOL_GROUP_END],
+                            parser->symbols[SYMBOL_ZERO_OR_MORE],
+                            &parser->zero_or_more_groups,
+                            &parser->zero_or_more_group_count);
 
-        unsigned int indices[parser->zero_or_more_group_count];
-        {
-            unsigned int i;
-            for (i = 0; i < parser->zero_or_more_group_count; ++i) {
-                indices[i] = 0;
-            }
-        }
+        // unsigned int indices[parser->zero_or_more_group_count];
+        // {
+        //     unsigned int i;
+        //     for (i = 0; i < parser->zero_or_more_group_count; ++i) {
+        //         indices[i] = 0;
+        //     }
+        // }
 
-        unsigned int match_count;
-        match_count = 0;
+        // unsigned int match_count;
+        // match_count = 0;
 
-        unsigned int k;
-        for (k = 0; k < parser->zero_or_more_group_count; ++k) {
-            size_t size = List_get_size(parser->zero_or_more_groups[k]);
-            if (size > 0) {
-                Token *token;
-                token = List_get_data(parser->zero_or_more_groups[k], size - 1);
-                if (strcmp(token->value, parser->symbols[SYMBOL_GROUP_END].value) == 0) {
-                    indices[k] = 1;
-                    ++match_count;
-                }
-            }
-        }
+        // unsigned int k;
+        // for (k = 0; k < parser->zero_or_more_group_count; ++k) {
+        //     size_t size = List_get_size(parser->zero_or_more_groups[k]);
+        //     if (size > 0) {
+        //         Token *token;
+        //         token = List_get_data(parser->zero_or_more_groups[k], size - 1);
+        //         if (strcmp(token->value, parser->symbols[SYMBOL_GROUP_END].value) == 0) {
+        //             indices[k] = 1;
+        //             ++match_count;
+        //         }
+        //     }
+        // }
 
-        List **temp_list;
-        temp_list = malloc(match_count * sizeof(List *));
-        if (temp_list != NULL) {
-            unsigned int i;
-            for (i = 0; i < match_count; ++i) {
-                temp_list[i] = List_create();
-            }
-        }
+        // List **temp_list;
+        // temp_list = malloc(match_count * sizeof(List *));
+        // if (temp_list != NULL) {
+        //     unsigned int i;
+        //     for (i = 0; i < match_count; ++i) {
+        //         temp_list[i] = List_create();
+        //     }
+        // }
 
-        unsigned int group_index;
-        group_index = 0;
+        // unsigned int group_index;
+        // group_index = 0;
 
-        for (k = 0; k < parser->zero_or_more_group_count; ++k) {
-            if (indices[k] == 1) {
-                Token *token;
-                token = NULL;
+        // for (k = 0; k < parser->zero_or_more_group_count; ++k) {
+        //     if (indices[k] == 1) {
+        //         Token *token;
+        //         token = NULL;
 
-                unsigned int i;
-                i = 0;
+        //         unsigned int i;
+        //         i = 0;
 
-                while ((token = List_get_data(parser->zero_or_more_groups[k], i)) != NULL) {
-                    Token *temp;
-                    temp = Token_create(token->value,
-                                        token->begin, token->end,
-                                        token->type);
-                    if (temp != NULL) {
-                        List_push_back(temp_list[group_index], temp);
-                    }
+        //         while ((token = List_get_data(parser->zero_or_more_groups[k], i)) != NULL) {
+        //             Token *temp;
+        //             temp = Token_create(token->value,
+        //                                 token->begin, token->end,
+        //                                 token->type);
+        //             if (temp != NULL) {
+        //                 List_push_back(temp_list[group_index], temp);
+        //             }
 
-                    ++i;
-                }
+        //             ++i;
+        //         }
 
-                ++group_index;
-            }
-        }
+        //         ++group_index;
+        //     }
+        // }
 
-        if (parser->zero_or_more_groups != NULL) {
-            unsigned int i;
-            for (i = 0; i < parser->zero_or_more_group_count; ++i) {
-                List_destroy(parser->zero_or_more_groups[i],
-                             (Destructor) Token_destroy);
-            }
-            free(parser->zero_or_more_groups);
-            parser->zero_or_more_groups = NULL;
-        }
+        // if (parser->zero_or_more_groups != NULL) {
+        //     unsigned int i;
+        //     for (i = 0; i < parser->zero_or_more_group_count; ++i) {
+        //         List_destroy(parser->zero_or_more_groups[i],
+        //                      (Destructor) Token_destroy);
+        //     }
+        //     free(parser->zero_or_more_groups);
+        //     parser->zero_or_more_groups = NULL;
+        // }
 
-        parser->zero_or_more_group_count = match_count;
-        parser->zero_or_more_groups = temp_list;
+        // parser->zero_or_more_group_count = match_count;
+        // parser->zero_or_more_groups = temp_list;
     }
 }
 
