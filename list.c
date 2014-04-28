@@ -15,7 +15,7 @@ struct List {
     Node *head;
 };
 
-static void to_string(List *l)
+void List_to_string(List *l)
 {
     if (l == NULL) {
         return;
@@ -194,4 +194,38 @@ void *List_get_data(List *l, unsigned int index)
     }
 
     return NULL;
+}
+
+
+void List_clear(List *list, Destructor destructor)
+{
+    if (list != NULL) {
+        while (list->head != NULL) {
+            Node *n = list->head->next;
+            Node_destroy(list->head, destructor);
+            list->head = n;
+        }
+        list->head = NULL;
+    }
+}
+
+
+size_t List_get_size(List *list)
+{
+    if (list == NULL || list->head == NULL) {
+        return 0;
+    }
+
+    size_t size;
+    size = 0;
+
+    Node *temp;
+    temp = list->head;
+
+    while (temp->next != NULL) {
+        temp = temp->next;
+        ++size;
+    }
+
+    return size;
 }

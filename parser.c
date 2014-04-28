@@ -11,7 +11,9 @@
 struct Parser {
     List *token_list;
     List **groups, **ranges;
+    List **zero_or_more_groups, **zero_or_more_ranges;
     size_t group_count, range_count;
+    size_t zero_or_more_group_count, zero_or_more_range_count;
     const Symbol *symbols;
     size_t symbol_count;
 };
@@ -95,10 +97,10 @@ static void get_delimited_tokens(const Parser *parser,
 
                 List_push_back(out[group_index], match);
 
-                printf("%4s%-4u=> \"%s\"\n",
-                       "",
-                       j,
-                       match->value);
+                // printf("%4s%-4u=> \"%s\"\n",
+                //        "",
+                //        j,
+                //        match->value);
 
                 if (strcmp(temp->value, beg.value) == 0) {
                     ++open_count;
@@ -141,6 +143,111 @@ static void init_groups(Parser *parser)
                 parser->groups[i] = List_create();
             }
         }
+
+        get_delimited_tokens(parser,
+                             parser->symbols[SYMBOL_GROUP_BEG],
+                             parser->symbols[SYMBOL_GROUP_END],
+                             parser->groups);
+    }
+}
+
+static void init_zero_or_more_groups(Parser *parser)
+{
+    if (parser == NULL) {
+        return;
+    }
+
+    if (parser->zero_or_more_groups == NULL) {
+        parser->zero_or_more_group_count = get_delimeted_group_count(
+            parser,
+            parser->symbols[SYMBOL_GROUP_BEG],
+            parser->symbols[SYMBOL_ZERO_OR_MORE]);
+
+        parser->zero_or_more_groups = malloc(parser->zero_or_more_group_count * sizeof(List *));
+        if (parser->zero_or_more_groups != NULL) {
+            unsigned int i;
+            for (i = 0; i < parser->zero_or_more_group_count; ++i) {
+                parser->zero_or_more_groups[i] = List_create();
+            }
+        }
+
+        get_delimited_tokens(parser,
+                             parser->symbols[SYMBOL_GROUP_BEG],
+                             parser->symbols[SYMBOL_ZERO_OR_MORE],
+                             parser->zero_or_more_groups);
+
+        unsigned int indices[parser->zero_or_more_group_count];
+        {
+            unsigned int i;
+            for (i = 0; i < parser->zero_or_more_group_count; ++i) {
+                indices[i] = 0;
+            }
+        }
+
+        unsigned int match_count;
+        match_count = 0;
+
+        unsigned int k;
+        for (k = 0; k < parser->zero_or_more_group_count; ++k) {
+            size_t size = List_get_size(parser->zero_or_more_groups[k]);
+            if (size > 0) {
+                Token *token;
+                token = List_get_data(parser->zero_or_more_groups[k], size - 1);
+                if (strcmp(token->value, parser->symbols[SYMBOL_GROUP_END].value) == 0) {
+                    indices[k] = 1;
+                    ++match_count;
+                }
+            }
+        }
+
+        List **temp_list;
+        temp_list = malloc(match_count * sizeof(List *));
+        if (temp_list != NULL) {
+            unsigned int i;
+            for (i = 0; i < match_count; ++i) {
+                temp_list[i] = List_create();
+            }
+        }
+
+        unsigned int group_index;
+        group_index = 0;
+
+        for (k = 0; k < parser->zero_or_more_group_count; ++k) {
+            if (indices[k] == 1) {
+                Token *token;
+                token = NULL;
+
+                unsigned int i;
+                i = 0;
+
+                while ((token = List_get_data(parser->zero_or_more_groups[k], i)) != NULL) {
+                    Token *temp;
+                    temp = Token_create(token->value,
+                                        token->begin, token->end,
+                                        token->type);
+                    if (temp != NULL) {
+                        List_push_back(temp_list[group_index], temp);
+                    }
+
+                    ++i;
+                }
+
+                ++group_index;
+            }
+        }
+
+        if (parser->zero_or_more_groups != NULL) {
+            unsigned int i;
+            for (i = 0; i < parser->zero_or_more_group_count; ++i) {
+                List_destroy(parser->zero_or_more_groups[i],
+                             (Destructor) Token_destroy);
+            }
+            free(parser->zero_or_more_groups);
+            parser->zero_or_more_groups = NULL;
+        }
+
+        parser->zero_or_more_group_count = match_count;
+        parser->zero_or_more_groups = temp_list;
     }
 }
 
@@ -163,6 +270,12 @@ static void init_ranges(Parser *parser)
                 parser->ranges[i] = List_create();
             }
         }
+
+        get_delimited_tokens(parser,
+                             parser->symbols[SYMBOL_RANGE_BEG],
+                             parser->symbols[SYMBOL_RANGE_END],
+                             parser->ranges);
+
     }
 }
 
@@ -319,6 +432,7 @@ static void init_tokens(Parser *parser,
         i += increment;
     }
 }
+
 Parser *Parser_create(const Symbol *symbols, const size_t symbol_count)
 {
     Parser *parser = malloc(sizeof(Parser));
@@ -330,9 +444,13 @@ Parser *Parser_create(const Symbol *symbols, const size_t symbol_count)
 
         parser->groups = NULL;
         parser->ranges = NULL;
+        parser->zero_or_more_groups = NULL;
+        parser->zero_or_more_ranges = NULL;
 
         parser->group_count = 0;
         parser->range_count = 0;
+        parser->zero_or_more_group_count = 0;
+        parser->zero_or_more_range_count = 0;
     }
 
     return parser;
@@ -350,6 +468,15 @@ void Parser_destroy(Parser *parser)
             }
             free(parser->groups);
             parser->groups = NULL;
+        }
+
+        if (parser->zero_or_more_groups != NULL) {
+            unsigned int i;
+            for (i = 0; i < parser->zero_or_more_group_count; ++i) {
+                List_destroy(parser->zero_or_more_groups[i], (Destructor) Token_destroy);
+            }
+            free(parser->zero_or_more_groups);
+            parser->zero_or_more_groups = NULL;
         }
 
         if (parser->ranges != NULL) {
@@ -373,14 +500,12 @@ void Parser_scan_tokens(Parser *parser,
     init_tokens(parser, tokens, token_count);
 
     init_groups(parser);
-    get_delimited_tokens(parser,
-                         parser->symbols[SYMBOL_GROUP_BEG],
-                         parser->symbols[SYMBOL_GROUP_END],
-                         parser->groups);
+    init_zero_or_more_groups(parser);
+
+    unsigned int k;
+    for (k = 0; k < parser->zero_or_more_group_count; ++k) {
+        List_to_string(parser->zero_or_more_groups[k]);
+    }
 
     init_ranges(parser);
-    get_delimited_tokens(parser,
-                         parser->symbols[SYMBOL_RANGE_BEG],
-                         parser->symbols[SYMBOL_RANGE_END],
-                         parser->ranges);
 }

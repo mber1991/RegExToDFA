@@ -93,7 +93,7 @@ int main(int argc, char **argv)
 
 
     const char *regex_str;
-    regex_str = "(a|b)*c\\*d.\\(\\[eDDDDDDDDDDD(f(s*ssg))i[a-j\\.[o-z[0-7]]]k\\.kk\\)*\\";
+    regex_str = "(a|b)*c\\*d.\\(\\[eDD(dd(gggl)*ddd|ccc)*DDDDDDDDD(f(s*ssg))i[a-j\\.[o-z[0-7]]]k\\.kk\\)*\\";
 
     printf("Regex:\n\"%s\"\n\n", regex_str);
 
