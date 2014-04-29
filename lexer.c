@@ -34,17 +34,32 @@ static Token *init_tokens(Regex *regex)
     return tokens;
 }
 
-Lexer *Lexer_create(Regex *regex)
+static void clear_data(Lexer *lexer)
 {
-    if (regex == NULL) {
-        return NULL;
+    if (lexer == NULL || lexer->tokens == NULL) {
+        return;
     }
 
+    unsigned int i;
+    for (i = 0; i < lexer->token_count; ++i) {
+        if (lexer->tokens[i].value != NULL) {
+            free(lexer->tokens[i].value);
+            lexer->tokens[i].value = NULL;
+        }
+    }
+    free(lexer->tokens);
+    lexer->tokens = NULL;
+
+    lexer->token_count = 0;
+}
+
+Lexer *Lexer_create(void)
+{
     Lexer *lexer = malloc(sizeof(Lexer));
 
     if (lexer != NULL) {
-        lexer->tokens = init_tokens(regex);
-        lexer->token_count = Regex_get_length(regex);
+        lexer->tokens = NULL;
+        lexer->token_count = 0;
     }
 
     return lexer;
@@ -56,17 +71,7 @@ void Lexer_destroy(Lexer *lexer)
         return;
     }
 
-    if (lexer->tokens != NULL) {
-        unsigned int i;
-        for (i = 0; i < lexer->token_count; ++i) {
-            if (lexer->tokens[i].value != NULL) {
-                free(lexer->tokens[i].value);
-                lexer->tokens[i].value = NULL;
-            }
-        }
-        free(lexer->tokens);
-        lexer->tokens = NULL;
-    }
+    clear_data(lexer);
 
     free(lexer);
     lexer = NULL;
@@ -88,4 +93,16 @@ size_t Lexer_get_token_count(Lexer *lexer)
     }
 
     return lexer->token_count;
+}
+
+void Lexer_scan_regex(Lexer *lexer, Regex *regex)
+{
+    if (lexer == NULL || regex == NULL) {
+        return;
+    }
+
+    clear_data(lexer);
+
+    lexer->tokens = init_tokens(regex);
+    lexer->token_count = Regex_get_length(regex);
 }
