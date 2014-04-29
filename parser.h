@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 
+#include "list.h"
 #include "token.h"
 
 
@@ -32,5 +33,7 @@ extern void Parser_destroy(Parser *parser);
 extern void Parser_scan_tokens(Parser *parser,
                                const Token *tokens,
                                const size_t token_count);
+
+extern List *Parser_get_token_list(Parser *parser);
 
 #endif

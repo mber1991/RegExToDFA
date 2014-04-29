@@ -15,56 +15,6 @@ struct List {
     Node *head;
 };
 
-static void to_string(List *l)
-{
-    if (l == NULL) {
-        return;
-    }
-
-    Node *temp = l->head;
-
-    while (temp != NULL) {
-        if (temp->data != NULL) {
-            Token *token = temp->data;
-            if (token->value != NULL) {
-                printf("\"%s\", at: %u",
-                       token->value,
-                       token->begin);
-
-                if (token->begin != token->end) {
-                    printf("-%u", token->end);
-                }
-
-                switch (token->type) {
-                    case TOKEN_SYMBOL:
-                        printf(", type: Symbol");
-                        break;
-                    case TOKEN_LITERAL:
-                        printf(", type: Literal");
-                        break;
-                    case TOKEN_ESCAPE_CHAR:
-                        printf(", type: Escape Character");
-                        break;
-                    case TOKEN_UNKNOWN:
-                        printf(", type: Unknown");
-                        break;
-                    default:
-                        break;
-                }
-                printf("\n");
-            }
-        }
-
-        if (temp->next == NULL) {
-            break;
-        }
-
-        temp = temp->next;
-    }
-
-    printf("\n");
-}
-
 static Node *end(Node *n)
 {
     if (n == NULL) {

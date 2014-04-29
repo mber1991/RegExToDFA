@@ -4,9 +4,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "list.h"
-#include "token.h"
-
 
 struct Parser {
     List *token_list;
@@ -95,11 +92,6 @@ static void get_delimited_tokens(const Parser *parser,
 
                 List_push_back(out[group_index], match);
 
-                printf("%4s%-4u=> \"%s\"\n",
-                       "",
-                       j,
-                       match->value);
-
                 if (strcmp(temp->value, beg.value) == 0) {
                     ++open_count;
                 }
@@ -134,11 +126,13 @@ static void init_groups(Parser *parser)
             parser->symbols[SYMBOL_GROUP_BEG],
             parser->symbols[SYMBOL_GROUP_END]);
 
-        parser->groups = malloc(parser->group_count * sizeof(List *));
-        if (parser->groups != NULL) {
-            unsigned int i;
-            for (i = 0; i < parser->group_count; ++i) {
-                parser->groups[i] = List_create();
+        if (parser->group_count > 0) {
+            parser->groups = malloc(parser->group_count * sizeof(List *));
+            if (parser->groups != NULL) {
+                unsigned int i;
+                for (i = 0; i < parser->group_count; ++i) {
+                    parser->groups[i] = List_create();
+                }
             }
         }
     }
@@ -156,11 +150,13 @@ static void init_ranges(Parser *parser)
             parser->symbols[SYMBOL_RANGE_BEG],
             parser->symbols[SYMBOL_RANGE_END]);
 
-        parser->ranges = malloc(parser->range_count * sizeof(List *));
-        if (parser->ranges != NULL) {
-            unsigned int i;
-            for (i = 0; i < parser->range_count; ++i) {
-                parser->ranges[i] = List_create();
+        if (parser->range_count > 0) {
+            parser->ranges = malloc(parser->range_count * sizeof(List *));
+            if (parser->ranges != NULL) {
+                unsigned int i;
+                for (i = 0; i < parser->range_count; ++i) {
+                    parser->ranges[i] = List_create();
+                }
             }
         }
     }
@@ -383,4 +379,13 @@ void Parser_scan_tokens(Parser *parser,
                          parser->symbols[SYMBOL_RANGE_BEG],
                          parser->symbols[SYMBOL_RANGE_END],
                          parser->ranges);
+}
+
+List *Parser_get_token_list(Parser *parser)
+{
+    if (parser == NULL) {
+        return NULL;
+    }
+
+    return parser->token_list;
 }
