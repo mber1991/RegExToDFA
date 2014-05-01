@@ -7,9 +7,8 @@
 
 struct IO {
     char *buffer;
+    const char *prompt;
 };
-
-static const char *prompt = "regextodfa> ";
 
 static void clear_buffer(char *buffer)
 {
@@ -19,13 +18,14 @@ static void clear_buffer(char *buffer)
     }
 }
 
-IO *IO_create(void)
+IO *IO_create(const char *prompt)
 {
     IO *io;
     io = malloc(sizeof(IO));
 
     if (io != NULL) {
         io->buffer = NULL;
+        io->prompt = prompt;
     }
 
     return io;
@@ -40,11 +40,20 @@ void IO_destroy(IO *io)
     }
 }
 
-const char *IO_read(IO *io)
+const char *IO_read(IO *io, const char *prompt)
 {
-    clear_buffer(io->buffer);
+    if (io == NULL) {
+        return NULL;
+    }
 
-    printf("%s", prompt);
+    if (prompt != NULL) {
+        printf("%s", prompt);
+    }
+    else {
+        printf("%s", io->prompt);
+    }
+
+    clear_buffer(io->buffer);
 
     size_t size;
     size = 0;
@@ -63,6 +72,10 @@ const char *IO_read(IO *io)
 
 void IO_write(const char *format, ...)
 {
+    if (format == NULL) {
+        return;
+    }
+
     va_list args;
     va_start(args, format);
 

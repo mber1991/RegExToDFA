@@ -1,7 +1,6 @@
 #include "state.h"
 
 #include <stdlib.h>
-#include <string.h>
 
 
 State *State_create(const size_t symbol_count,

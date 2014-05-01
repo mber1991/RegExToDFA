@@ -1,9 +1,6 @@
 #include "list.h"
 
 #include <stdlib.h>
-#include <stdio.h>
-
-#include "token.h"
 
 
 struct Node {
@@ -95,8 +92,6 @@ List *List_create(void)
 void List_destroy(List *list, Destructor destructor)
 {
     if (list != NULL) {
-        // to_string(list);
-
         while (list->head != NULL) {
             Node *n = list->head->next;
             Node_destroy(list->head, destructor);

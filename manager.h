@@ -2,6 +2,13 @@
 #define MANAGER_H
 
 
+typedef enum COMMAND {
+    COMMAND_UNKNOWN,
+    COMMAND_DFA,
+    COMMAND_HELP,
+    COMMAND_QUIT,
+} COMMAND;
+
 typedef struct Manager Manager;
 
 extern Manager *Manager_create(void);
