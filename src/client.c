@@ -1,4 +1,4 @@
-#include "manager.h"
+#include "client.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -12,7 +12,7 @@
 #include "io.h"
 
 
-struct Manager {
+struct Client {
     IO *io;
     Lexer *lexer;
     Parser *parser;
@@ -60,29 +60,29 @@ static void command_unknown(void)
     IO_write("command not found\n");
 }
 
-static void command_dfa(const Manager *manager)
+static void command_dfa(const Client *client)
 {
-    if (manager == NULL) {
+    if (client == NULL) {
         return;
     }
 
     const char *input;
-    input = IO_read(manager->io, "enter regex below:\n");
+    input = IO_read(client->io, "enter regex below:\n");
 
-    Regex_set_value(manager->regex, input);
+    Regex_set_value(client->regex, input);
 
-    Lexer_scan_regex(manager->lexer, manager->regex);
+    Lexer_scan_regex(client->lexer, client->regex);
 
-    Parser_scan_tokens(manager->parser,
-                       Lexer_get_tokens(manager->lexer),
-                       Lexer_get_token_count(manager->lexer));
+    Parser_scan_tokens(client->parser,
+                       Lexer_get_tokens(client->lexer),
+                       Lexer_get_token_count(client->lexer));
 
-    build_dfa(Parser_get_token_list(manager->parser));
+    build_dfa(Parser_get_token_list(client->parser));
 }
 
-static void command_help(const Manager *manager)
+static void command_help(const Client *client)
 {
-    if (manager == NULL) {
+    if (client == NULL) {
         return;
     }
 
@@ -91,14 +91,14 @@ static void command_help(const Manager *manager)
     unsigned int i;
     for (i = 1; i < command_count; ++i) {
         IO_write("%-5s- %s\n",
-                 manager->commands[i],
-                 manager->help_messages[i]);
+                 client->commands[i],
+                 client->help_messages[i]);
     }
 }
 
-static void command_quit(Manager *manager)
+static void command_quit(Client *client)
 {
-    Manager_destroy(manager);
+    Client_destroy(client);
     exit(0);
 }
 
@@ -127,28 +127,28 @@ static int init_signals(void)
     return 1;
 }
 
-static COMMAND get_command(const Manager *manager, const char *command_str)
+static COMMAND get_command(const Client *client, const char *command_str)
 {
-    if (manager == NULL || command_str == NULL) {
+    if (client == NULL || command_str == NULL) {
         return COMMAND_UNKNOWN;
     }
 
-    if (strcmp(command_str, manager->commands[COMMAND_HELP]) == 0) {
+    if (strcmp(command_str, client->commands[COMMAND_HELP]) == 0) {
         return COMMAND_HELP;
     }
-    if (strcmp(command_str, manager->commands[COMMAND_DFA]) == 0) {
+    if (strcmp(command_str, client->commands[COMMAND_DFA]) == 0) {
         return COMMAND_DFA;
     }
-    if (strcmp(command_str, manager->commands[COMMAND_QUIT]) == 0) {
+    if (strcmp(command_str, client->commands[COMMAND_QUIT]) == 0) {
         return COMMAND_QUIT;
     }
 
     return COMMAND_UNKNOWN;
 }
 
-static void run_command(Manager *manager, COMMAND command)
+static void run_command(Client *client, COMMAND command)
 {
-    if (manager == NULL) {
+    if (client == NULL) {
         return;
     }
 
@@ -158,15 +158,15 @@ static void run_command(Manager *manager, COMMAND command)
             break;
 
         case COMMAND_DFA:
-            command_dfa(manager);
+            command_dfa(client);
             break;
 
         case COMMAND_HELP:
-            command_help(manager);
+            command_help(client);
             break;
 
         case COMMAND_QUIT:
-            command_quit(manager);
+            command_quit(client);
             break;
 
         default:
@@ -174,57 +174,57 @@ static void run_command(Manager *manager, COMMAND command)
     }
 }
 
-Manager *Manager_create(void)
+Client *Client_create(void)
 {
-    Manager *manager;
-    manager = malloc(sizeof(Manager));
+    Client *client;
+    client = malloc(sizeof(Client));
 
-    if (manager != NULL) {
-        manager->io = IO_create(default_prompt);
-        manager->lexer = Lexer_create();
-        manager->parser = Parser_create(symbols, symbol_count);
-        manager->regex = Regex_create("");
+    if (client != NULL) {
+        client->io = IO_create(default_prompt);
+        client->lexer = Lexer_create();
+        client->parser = Parser_create(symbols, symbol_count);
+        client->regex = Regex_create("");
 
-        manager->help_messages = help_messages;
-        manager->commands = commands;
+        client->help_messages = help_messages;
+        client->commands = commands;
 
         init_signals();
         init_terminal();
     }
 
-    return manager;
+    return client;
 }
 
-void Manager_destroy(Manager *manager)
+void Client_destroy(Client *client)
 {
-    if (manager == NULL) {
+    if (client == NULL) {
         return;
     }
 
-    Regex_destroy(manager->regex);
-    Parser_destroy(manager->parser);
-    Lexer_destroy(manager->lexer);
-    IO_destroy(manager->io);
+    Regex_destroy(client->regex);
+    Parser_destroy(client->parser);
+    Lexer_destroy(client->lexer);
+    IO_destroy(client->io);
 
     reset_terminal();
 
-    free(manager);
-    manager = NULL;
+    free(client);
+    client = NULL;
 }
 
-void Manager_run(Manager *manager)
+void Client_run(Client *client)
 {
-    if (manager == NULL) {
+    if (client == NULL) {
         return;
     }
 
     while (1) {
         const char *input;
-        input = IO_read(manager->io, NULL);
+        input = IO_read(client->io, NULL);
         if (input != NULL && input[0] != '\0') {
             COMMAND command;
-            command = get_command(manager, input);
-            run_command(manager, command);
+            command = get_command(client, input);
+            run_command(client, command);
         }
     }
 }

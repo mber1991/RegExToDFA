@@ -1,4 +1,4 @@
-#include "manager.h"
+#include "client.h"
 
 
 int main(int argc, char **argv)
@@ -6,12 +6,12 @@ int main(int argc, char **argv)
     (void) argc;
     (void) argv;
 
-    Manager *manager;
-    manager = Manager_create();
+    Client *client;
+    client = Client_create();
 
-    Manager_run(manager);
+    Client_run(client);
 
-    Manager_destroy(manager);
+    Client_destroy(client);
 
     return 0;
 }
