@@ -54,13 +54,6 @@ void build_dfa(List *list)
         }
     }
 
-    const unsigned int transitions[symbol_count];
-
-    State state;
-    state.symbols = symbols;
-    state.symbol_count = symbol_count;
-    state.transitions = transitions;
-
     const unsigned int terminal_states[3] = {
         1,
         2,
@@ -69,11 +62,29 @@ void build_dfa(List *list)
 
     DFA *dfa = DFA_create(10, terminal_states, 3);
 
-    DFA_set_state(dfa, 0, &state);
-    DFA_set_state(dfa, 1, &state);
-    DFA_set_state(dfa, 2, &state);
-    DFA_set_state(dfa, 3, &state);
-    DFA_set_state(dfa, 4, &state);
+    const unsigned int transitions[symbol_count];
+
+    {
+        State state;
+        state.symbols = symbols;
+        state.symbol_count = symbol_count;
+        state.transitions = transitions;
+
+        DFA_set_state(dfa, 0, &state);
+        DFA_set_state(dfa, 1, &state);
+        DFA_set_state(dfa, 2, &state);
+        DFA_set_state(dfa, 3, &state);
+        DFA_set_state(dfa, 4, &state);
+    }
+
+    {
+        State *state;
+        state = State_create(symbol_count, symbols, transitions);
+
+        DFA_set_state(dfa, 0, state);
+
+        State_destroy(state);
+    }
 
     DFA_destroy(dfa);
 }
