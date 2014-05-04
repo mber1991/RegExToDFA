@@ -77,7 +77,11 @@ static void command_dfa(const Client *client)
                        Lexer_get_tokens(client->lexer),
                        Lexer_get_token_count(client->lexer));
 
-    build_dfa(Parser_get_token_list(client->parser));
+    IO_write("\n\n");
+    build_dfa(Parser_get_token_list(client->parser),
+              Parser_get_groups(client->parser),
+              Parser_get_group_count(client->parser));
+
 }
 
 static void command_help(const Client *client)

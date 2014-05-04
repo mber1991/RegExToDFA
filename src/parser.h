@@ -35,5 +35,7 @@ extern void Parser_scan_tokens(Parser *parser,
                                const size_t token_count);
 
 extern List *Parser_get_token_list(Parser *parser);
+extern List **Parser_get_groups(Parser *parser);
+extern size_t Parser_get_group_count(Parser *parser);
 
 #endif

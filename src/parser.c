@@ -161,6 +161,11 @@ static void init_groups(Parser *parser)
                 for (i = 0; i < parser->group_count; ++i) {
                     parser->groups[i] = List_create();
                 }
+
+                get_delimited_tokens(parser,
+                                     parser->symbols[SYMBOL_GROUP_BEG],
+                                     parser->symbols[SYMBOL_GROUP_END],
+                                     parser->groups);
             }
         }
     }
@@ -185,6 +190,11 @@ static void init_ranges(Parser *parser)
                 for (i = 0; i < parser->range_count; ++i) {
                     parser->ranges[i] = List_create();
                 }
+
+                get_delimited_tokens(parser,
+                                     parser->symbols[SYMBOL_RANGE_BEG],
+                                     parser->symbols[SYMBOL_RANGE_END],
+                                     parser->ranges);
             }
         }
     }
@@ -323,8 +333,6 @@ static void init_tokens(Parser *parser,
                                      literal_match_type);
 
                 List_push_back(parser->token_list, token);
-
-                printf("\"%s\"\n", token->value);
             }
         }
 
@@ -336,8 +344,6 @@ static void init_tokens(Parser *parser,
                                      symbol_match_type);
 
                 List_push_back(parser->token_list, token);
-
-                printf("\"%s\"\n", token->value);
             }
         }
 
@@ -404,16 +410,7 @@ void Parser_scan_tokens(Parser *parser,
     init_tokens(parser, tokens, token_count);
 
     init_groups(parser);
-    get_delimited_tokens(parser,
-                         parser->symbols[SYMBOL_GROUP_BEG],
-                         parser->symbols[SYMBOL_GROUP_END],
-                         parser->groups);
-
     init_ranges(parser);
-    get_delimited_tokens(parser,
-                         parser->symbols[SYMBOL_RANGE_BEG],
-                         parser->symbols[SYMBOL_RANGE_END],
-                         parser->ranges);
 }
 
 List *Parser_get_token_list(Parser *parser)
@@ -423,4 +420,22 @@ List *Parser_get_token_list(Parser *parser)
     }
 
     return parser->token_list;
+}
+
+List **Parser_get_groups(Parser *parser)
+{
+    if (parser == NULL) {
+        return NULL;
+    }
+
+    return parser->groups;
+}
+
+size_t Parser_get_group_count(Parser *parser)
+{
+    if (parser == NULL) {
+        return 0;
+    }
+
+    return parser->group_count;
 }
