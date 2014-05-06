@@ -99,6 +99,9 @@ void DFA_set_state(DFA *dfa,
     dfa->states[state_index].transitions = state->transitions;
 }
 
+/*
+ * Print a string representation of a given DFA
+ */
 void DFA_to_string(DFA *dfa)
 {
     char temp[128];

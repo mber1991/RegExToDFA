@@ -43,6 +43,10 @@ static void clear_data(Parser *parser)
     }
 }
 
+/*
+ * Returns the total number of groups delimeted by the given beginning
+ * and ending delimeters
+ */
 static size_t get_delimeted_group_count(const Parser *parser,
                                         const Symbol beg,
                                         const Symbol end)
@@ -90,6 +94,9 @@ static size_t get_delimeted_group_count(const Parser *parser,
     return group_count;
 }
 
+/*
+ * Returns all tokens delimeted by the given beginning and ending delimeters
+ */
 static void get_delimited_tokens(const Parser *parser,
                                  const Symbol beg,
                                  const Symbol end,
@@ -142,6 +149,9 @@ static void get_delimited_tokens(const Parser *parser,
     }
 }
 
+/*
+ * Match groups
+ */
 static void init_groups(Parser *parser)
 {
     if (parser == NULL) {
@@ -171,6 +181,9 @@ static void init_groups(Parser *parser)
     }
 }
 
+/*
+ * Match ranges
+ */
 static void init_ranges(Parser *parser)
 {
     if (parser == NULL) {
@@ -200,6 +213,9 @@ static void init_ranges(Parser *parser)
     }
 }
 
+/*
+ * Match high level parser-tokens using lexer-tokens
+ */
 static void init_tokens(Parser *parser,
                         const Token *tokens,
                         const size_t token_count)

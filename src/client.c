@@ -66,18 +66,24 @@ static void command_dfa(const Client *client)
         return;
     }
 
+    /* Read a line of input from stdin */
     const char *input;
     input = IO_read(client->io, "enter regex below:\n");
 
+    /* Store input in Regex container */
     Regex_set_value(client->regex, input);
 
+    /* Create list of lexer-tokens */
     Lexer_scan_regex(client->lexer, client->regex);
 
+    /* Create list of higher level parser-tokens */
     Parser_scan_tokens(client->parser,
                        Lexer_get_tokens(client->lexer),
                        Lexer_get_token_count(client->lexer));
 
     IO_write("\n\n");
+
+    /* Build a DFA using the data gathered thus far */
     build_dfa(Parser_get_token_list(client->parser),
               Parser_get_groups(client->parser),
               Parser_get_group_count(client->parser));
@@ -106,6 +112,10 @@ static void command_quit(Client *client)
     exit(0);
 }
 
+/*
+ * Sets up terminal attributes.
+ * Disables echo'ing of control characters
+ */
 static void init_terminal(void)
 {
     tcgetattr(fileno(stdin), &orig_term_attr);
@@ -122,6 +132,10 @@ static void reset_terminal(void)
     tcsetattr(fileno(stdin), TCSANOW, &orig_term_attr);
 }
 
+/*
+ * Sets up signal handling.
+ * Ignores SIGINT, thus disabling Ctrl-C
+ */
 static int init_signals(void)
 {
     if (signal(SIGINT, SIG_IGN) == SIG_ERR) {

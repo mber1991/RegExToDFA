@@ -8,7 +8,13 @@
 #include "dfa.h"
 
 
-static List **get_states(List *tokens, List **groups, size_t group_count, size_t state_count)
+/*
+ * Get a Multi-Dimensional List of tokens in each state
+ */
+static List **get_states(List *tokens,
+                         List **groups,
+                         size_t group_count,
+                         size_t state_count)
 {
     List **states;
     states = malloc(256 * sizeof(List *));
@@ -34,7 +40,9 @@ static List **get_states(List *tokens, List **groups, size_t group_count, size_t
                 || token->type == TOKEN_ESCAPE_CHAR
             ) {
                 Token *match;
-                match = Token_create(token->value, token->begin, token->end, token->type);
+                match = Token_create(token->value,
+                                     token->begin, token->end,
+                                     token->type);
                 List_push_back(states[state_index], match);
 
                 ++state_index;
@@ -82,13 +90,17 @@ static List **get_states(List *tokens, List **groups, size_t group_count, size_t
                 group_match = 0;
 
                 Token *match;
-                match = Token_create(token->value, token->begin, token->end, token->type);
+                match = Token_create(token->value,
+                                     token->begin, token->end,
+                                     token->type);
                 List_push_back(states[state_index], match);
             }
             else {
                 ++state_index;
                 Token *match;
-                match = Token_create(token->value, token->begin, token->end, token->type);
+                match = Token_create(token->value,
+                                     token->begin, token->end,
+                                     token->type);
                 List_push_back(states[state_index], match);
 
                 if (group_match_count > 0) {
@@ -104,6 +116,9 @@ static List **get_states(List *tokens, List **groups, size_t group_count, size_t
     return states;
 }
 
+/*
+ * Get the total number of required DFA states from a list of tokens
+ */
 static size_t get_state_count(List *tokens, List **groups, size_t group_count)
 {
     size_t state_count;
@@ -177,6 +192,9 @@ static size_t get_state_count(List *tokens, List **groups, size_t group_count)
     return state_count;
 }
 
+/*
+ * Get the total symbol count for each DFA state from a list of tokens
+ */
 static size_t get_symbol_count(List *tokens)
 {
     size_t symbol_count;
@@ -201,6 +219,9 @@ static size_t get_symbol_count(List *tokens)
     return symbol_count;
 }
 
+/*
+ * Construct a DFA using data from the Parser
+ */
 void build_dfa(List *tokens, List **groups, size_t group_count)
 {
     if (tokens == NULL) {
@@ -234,7 +255,6 @@ void build_dfa(List *tokens, List **groups, size_t group_count)
             ++i;
         }
     }
-
 
     size_t state_count;
     state_count = get_state_count(tokens, groups, group_count) + 1;
@@ -287,7 +307,9 @@ void build_dfa(List *tokens, List **groups, size_t group_count)
             while ((temp = List_get_data(states[state_index-1], j)) != NULL) {
                 unsigned int k;
                 for (k = 0; k < symbol_count; ++k) {
-                    if (strcmp(temp->value, symbols[k]) == 0 && transitions[k] == 0) {
+                    if (strcmp(temp->value, symbols[k]) == 0
+                        && transitions[k] == 0
+                    ) {
                         transitions[k] = state_index;
                     }
                 }
