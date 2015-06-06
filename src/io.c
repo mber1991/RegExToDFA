@@ -10,11 +10,11 @@ struct IO {
     const char *prompt;
 };
 
-static void clear_buffer(char *buffer)
+static void clear_buffer(char **buffer)
 {
-    if (buffer != NULL) {
-        free(buffer);
-        buffer = NULL;
+    if (*buffer != NULL) {
+        free(*buffer);
+        *buffer = NULL;
     }
 }
 
@@ -34,7 +34,7 @@ IO *IO_create(const char *prompt)
 void IO_destroy(IO *io)
 {
     if (io != NULL) {
-        clear_buffer(io->buffer);
+        clear_buffer(&io->buffer);
         free(io);
         io = NULL;
     }
@@ -53,7 +53,7 @@ const char *IO_read(IO *io, const char *prompt)
         printf("%s", io->prompt);
     }
 
-    clear_buffer(io->buffer);
+    clear_buffer(&io->buffer);
 
     size_t size;
     size = 0;
